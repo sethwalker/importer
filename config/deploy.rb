@@ -1,5 +1,5 @@
 set :application, "auctioneer"
-set :repository,  "git@fortress.jadedpixel.com:ebay.git"
+set :repository,  "git://github.com/Shopify/importer.git"
  
  
 set :scm, :git
@@ -8,9 +8,9 @@ set :deploy_via, :remote_cache
 set :scm_verbose, true
 set :use_sudo, false
  
-role :app, "tobi1.jadedpixel.com"
-role :web, "tobi1.jadedpixel.com"
-role :db,  "tobi1.jadedpixel.com", :primary => true
+role :app, "apps.shopifyapps.com"
+role :web, "apps.shopifyapps.com"
+role :db,  "apps.shopifyapps.com", :primary => true
  
 namespace :deploy do
   desc "Restart Application"
@@ -18,8 +18,11 @@ namespace :deploy do
     run "touch #{current_path}/tmp/restart.txt"
   end
   task :start do
+    puts '!! Start Apache'
   end
+  
   task :stop do
+    puts '!! Stop Apache'
   end
 end
                                   
