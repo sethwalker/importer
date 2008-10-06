@@ -1,4 +1,4 @@
-set :application, "auctioneer"
+set :application, "importer"
 set :repository,  "git://github.com/Shopify/importer.git"
  
  

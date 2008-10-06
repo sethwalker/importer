@@ -37,5 +37,3 @@ db/backup
 
 *.db
 
-# Ignore database 
-config/database.yml
