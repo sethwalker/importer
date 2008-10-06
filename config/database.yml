@@ -3,7 +3,6 @@ development:
   database: importer_dev
   username: root 
   password:        
-  encoding: utf8
 
 production:
   adapter: mysql

@@ -11,7 +11,7 @@ class WordPressImportTest < ActiveSupport::TestCase
   end
   
   def test_save_data
-    ShopifyAPI::Article.any_instance.expects(:save).times(4)
+    ShopifyAPI::Article.any_instance.expects(:save).times(8)
     ShopifyAPI::Blog.any_instance.expects(:save).times(1)
     ShopifyAPI::Page.any_instance.expects(:save).times(1)
     ShopifyAPI::Comment.any_instance.expects(:save).times(3)
@@ -29,7 +29,7 @@ class WordPressImportTest < ActiveSupport::TestCase
   end
   
   def test_skipped
-    ShopifyAPI::Article.any_instance.expects(:save).times(4)
+    ShopifyAPI::Article.any_instance.expects(:save).times(8)
     ShopifyAPI::Blog.any_instance.expects(:save).times(1)
     ShopifyAPI::Page.any_instance.expects(:save).times(1)
     ShopifyAPI::Comment.any_instance.expects(:save).times(3)

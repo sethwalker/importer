@@ -1,5 +1,10 @@
 class WordPressImport < Import
 
+  # from import.rb
+  def source=(file_data)
+     @file_data = file_data if file_data.original_filename.split(".").last == 'xml'
+   end
+
   def blog_title
     @blog_title ||= REXML::XPath.match(xml, 'rss/channel/title').first.text    
   end
@@ -50,8 +55,12 @@ class WordPressImport < Import
     pages.each(&:save)
 
     @blog.save
-    articles.each do |a|
+    articles.each do |a|  
+      current_saved_date = a.published_at
       a.prefix_options[:blog_id] = @blog.id
+      a.save
+      
+      a.published_at = current_saved_date
       a.save
     end
 

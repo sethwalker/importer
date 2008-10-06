@@ -12,13 +12,14 @@ class ImportController < ApplicationController
   def create
     begin
       eval "@import = #{params[:type].camelize}Import.new(params[:import])"
-      @import.write_file
+
+      flash[:error] = "Error importing your blog. Wrong file type." unless @import.write_file      
       if @import.save
         flash[:notice] = "Your WordPress Export file was successfully uploaded."
         @import.guess
       else
-        flash[:error] = "Error importing your blog."
-        render :action => "index"
+        flash[:error] = "Error importing your blog." unless flash[:error]
+        render :action => "new"
       end
     
     rescue NameError => e
