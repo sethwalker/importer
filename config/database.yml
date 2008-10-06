@@ -1,0 +1,20 @@
+development:
+  adapter: mysql
+  database: importer_dev
+  username: root 
+  password:        
+  encoding: utf8
+
+production:
+  adapter: mysql
+  database: importer_dev
+  username: root 
+  password:  
+  encoding: utf8
+          
+test:
+  adapter: mysql
+  database: importer_test
+  username: root
+  password:
+  encoding: utf8
