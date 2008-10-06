@@ -1,0 +1,19 @@
+<% current_host = "#{request.host}#{':' + request.port.to_s if request.port != 80}" %>
+
+<% shop_name_script = \
+"var name = $('shop').value; 
+if (name.indexOf('.') == -1) { var api_url = name + '.myshopify.com'; } else { var api_url = name.replace(/^https?:\\/\\//, ''); } 
+$('api-form').action = 'http://' + api_url + '/admin/api_clients/new';"
+%>
+
+<h1>Welcome</h1>
+
+<p class="tagline">
+  This is a Shopify application that uses the Shopify API. 
+</p>
+<p>
+  This application will allow you to import content (currently just blogs) into your Shopify shops from other services on the web.
+</p>
+<p>
+  For more information about the Shopify API check out <%= link_to 'http://shopify.com/developers', 'http://shopify.com/developers' %>.
+</p>

@@ -1,0 +1,5 @@
+A simple aggregator demo application for the Shopify API
+
+http://www.shopify.com/developers/
+
+Replace the API Key and Secret in shopify.yml

@@ -1,0 +1,10 @@
+<h2>File Upload</h2>
+<p>Please upload your Wordpress WXR file. You can get this by logging in to the 
+admin interface of your WordPress blog and selecting the 'Export' tab. <br>
+Export the file to your local machine and then upload it here.</p>
+
+<%= error_messages_for :import %>
+<% form_for :import, @import, :url => { :action=>'create', :type => params[:type], :id => params[:id] }, :html => { :multipart => true } do |f| %>
+  <%= f.file_field :source %>
+  <%= submit_tag "Upload" %>
+<% end %>
