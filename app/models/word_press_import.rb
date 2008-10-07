@@ -34,9 +34,6 @@ class WordPressImport < Import
   end
     
   def parse
-    # Start timing!
-    self.start_time = Time.now
-    
     # Create a new blog with the title from Wordpress
     @blog = ShopifyAPI::Blog.new(:title => blog_title)   
 
@@ -52,9 +49,16 @@ class WordPressImport < Import
   end
   
   def save_data
-    pages.each(&:save)
+    pages.each do |p|
+      current_saved_date = p.published_at
+      p.save
+      
+      p.published_at = current_saved_date
+      p.save
+    end
 
-    @blog.save
+
+    @blog.save    
     articles.each do |a|  
       current_saved_date = a.published_at
       a.prefix_options[:blog_id] = @blog.id
@@ -70,9 +74,6 @@ class WordPressImport < Import
       key.article_id = value.id
       key.save
     end
-    
-    # Stop timing!
-    self.finish_time = Time.now
   end
   
   private  

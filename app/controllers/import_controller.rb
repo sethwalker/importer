@@ -35,8 +35,10 @@ class ImportController < ApplicationController
     begin
       # Find the import job 
       eval "@import = #{params[:type].camelize}Import.find(params[:id])"
+      @import.start_time = Time.now
       @import.parse
       @import.save_data
+      @import.finish_time = Time.now
     rescue REXML::ParseException => e
       flash[:error] = "Error importing blog. Your file is not valid XML."
     rescue ActiveResource::ResourceNotFound => e

@@ -13,7 +13,7 @@ class WordPressImportTest < ActiveSupport::TestCase
   def test_save_data
     ShopifyAPI::Article.any_instance.expects(:save).times(8)
     ShopifyAPI::Blog.any_instance.expects(:save).times(1)
-    ShopifyAPI::Page.any_instance.expects(:save).times(1)
+    ShopifyAPI::Page.any_instance.expects(:save).times(2)
     ShopifyAPI::Comment.any_instance.expects(:save).times(3)
 
     @import.parse    
@@ -31,7 +31,7 @@ class WordPressImportTest < ActiveSupport::TestCase
   def test_skipped
     ShopifyAPI::Article.any_instance.expects(:save).times(8)
     ShopifyAPI::Blog.any_instance.expects(:save).times(1)
-    ShopifyAPI::Page.any_instance.expects(:save).times(1)
+    ShopifyAPI::Page.any_instance.expects(:save).times(2)
     ShopifyAPI::Comment.any_instance.expects(:save).times(3)
     
     @import.guess
@@ -41,7 +41,7 @@ class WordPressImportTest < ActiveSupport::TestCase
     @import.save_data
     total = @import.posts + @import.pages + @import.comments
     
-    assert_equal guessed - total, @import.skipped
+    assert_equal 0, @import.skipped
   end
   
   def test_blog_title
