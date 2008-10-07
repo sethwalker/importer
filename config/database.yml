@@ -6,9 +6,9 @@ development:
 
 production:
   adapter: mysql
-  database: importer_dev
+  database: importer
   username: root 
-  password:  
+  password: password
   encoding: utf8
           
 test:

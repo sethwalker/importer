@@ -15,8 +15,8 @@ class ImportController < ApplicationController
 
       flash[:error] = "Error importing your blog. Wrong file type." unless @import.write_file      
       if @import.save
-        flash[:notice] = "Your WordPress Export file was successfully uploaded."
         @import.guess
+        flash[:notice] = "Your WordPress Export file was successfully uploaded."
       else
         flash[:error] = "Error importing your blog." unless flash[:error]
         render :action => "new"
