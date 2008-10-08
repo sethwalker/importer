@@ -1,12 +1,14 @@
-<h2>WordPress Import</h2>
+<h2 class="orange">WordPress Import</h2>
 
-<p>Here you can import all of your content from a WordPress blog into a Shopify blog. With this tool you can import all posts, comments, and static pages.</p>
+<div class="light">
+	<p>Here you can import all of your content from a WordPress blog into a Shopify blog. With this tool you can import all posts, comments, and static pages.</p>
 
-<%= error_messages_for :import %>
-<% form_for :import, @import, :url => { :action=>'create', :type => params[:type], :id => params[:id] }, :html => { :multipart => true } do |f| %>
-  <%= f.file_field :source %>
-  <%= submit_tag "Upload" %>
-<% end %>
+	<%= error_messages_for :import %>
+	<% form_for :import, @import, :url => { :action=>'create', :type => params[:type], :id => params[:id] }, :html => { :multipart => true } do |f| %>
+	  <%= f.file_field :source %>
+	  <%= submit_tag "Upload" %>
+	<% end %>
+</div>
 
 <p>You will need to upload your WordPress Export file, which will contain all of the data necessary for the import. Here are the instructions:</p>
 <ol>
