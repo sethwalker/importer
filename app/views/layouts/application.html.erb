@@ -20,6 +20,9 @@
 		<% if current_shop %>
 	    	<span class="note">current shop</span> <%= link_to current_shop.url, current_shop.url, :id => 'shop_url' %> <span class="note">|</span> 					
 			<%= link_to 'logout', :controller => "login", :action => 'logout' %>
+		<% else %>
+	    	<span class="note">current shop</span> none <span class="note">|</span> 					
+			<%= link_to 'login', :controller => "login", :action => 'index' %>			
 		<% end %>
 	</p>
   </div>

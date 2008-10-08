@@ -11,7 +11,7 @@ class LoginController < ApplicationController
     if shopify_session.valid?
       session[:shopify] = shopify_session
       flash[:notice] = "Logged in to shopify store."
-      redirect_to '/word_press'
+      redirect_to :action => 'index'
     else
       flash[:error] = "Could not log in to shopify store."
       redirect_to :action => 'index'
@@ -19,9 +19,9 @@ class LoginController < ApplicationController
   end
   
   def logout
-      session[:shopify] = nil
-      flash[:notice] = "Successfully logged out."
+    session[:shopify] = nil
+    flash[:notice] = "Successfully logged out."
 
-      redirect_to :action => 'index'
-    end
+    redirect_to :action => 'index'
+  end
 end

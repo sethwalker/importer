@@ -1,15 +1,16 @@
-<h1>Login</h1>
+<h2 class="orange">Login</h2>
 
 <p>
-  First you have to register Importer with your shop to allow access to its private data.
-</p>
-
-<% form_tag '/login/authenticate' do %>
-  <label for='shop'><strong>The URL of the Shop</strong>
-    <span class="hint">(or just the subdomain if it's at myshopify.com)</span>
-  </label>
-  <p>
-    <%= text_field_tag 'shop' %>
+    Before you can use Importer you have to register it with your shop to allow access to the shop's data.
   </p>
-  <%= submit_tag 'Authenticate' %>
-<% end %>
+
+<div class="light">
+	<% form_tag :controller => 'login', :action => 'authenticate' do %>
+	    <label for='shop'><strong>The URL of the Shop</strong>
+	      <span class="note">(or its <strong>myshopify.com</strong> subdomain)</span>
+	    </label>
+	    <p>
+	      <%= text_field_tag 'shop', {}, :style => "width: 240px" %> <%= submit_tag 'Authenticate' %>
+	    </p>
+	<% end %>
+</div>
