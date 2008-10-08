@@ -32,8 +32,6 @@ class WordPressController < ApplicationController
   end
 
   def import
-    ShopifyAPI::Blog.find(:all).each(&:destroy)
-    ShopifyAPI::Page.find(:all).each(&:destroy)
     begin
       # Find the import job 
       @import = params[:id] ? WordPressImport.find(params[:id]) : WordPressImport.last_import

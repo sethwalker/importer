@@ -5,3 +5,8 @@
 	<h2 class="red" id="success">There was an error importing your blog</h2>
 	<p><%= flash[:error] %></p>
 <% end %>
+
+<div class="light">
+	<p><%= link_to 'Check out the new Shopify blog', "http://#{current_shop.url}/blogs/#{@import.blog_title}" %></p>
+	<p><%= link_to 'Go back for more importing!' '/' %></p>
+</div>
