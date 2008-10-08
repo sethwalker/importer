@@ -1,3 +1,2 @@
 page.replace_html 'status', :partial => 'import'
-page.remove 'guess'
 flash.discard

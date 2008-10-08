@@ -22,6 +22,9 @@ class WordPressController < ApplicationController
     rescue NameError => e
       flash[:error] = "The type of import that you are attempting is not currently supported."
       render :action => "new"
+    rescue REXML::ParseException => e
+      flash[:error] = "Error importing blog. Your file is not valid XML."      
+      render :action => "new"
     end
   end
     
@@ -29,6 +32,8 @@ class WordPressController < ApplicationController
   end
 
   def import
+    ShopifyAPI::Blog.find(:all).each(&:destroy)
+    ShopifyAPI::Page.find(:all).each(&:destroy)
     begin
       # Find the import job 
       @import = params[:id] ? WordPressImport.find(params[:id]) : WordPressImport.last_import
@@ -47,9 +52,12 @@ class WordPressController < ApplicationController
     else
       flash[:notice] = "Blog successfully imported! You have imported " + help.pluralize(@import.posts, 'blog post') + ", " + help.pluralize(@import.pages, 'page') + ", and " + help.pluralize(@import.comments, 'comment') + ", with #{@import.skipped} skipped."      
     end
-        
-#    redirect_to :controller => 'dashboard', :action => 'index'
-    render :partial => 'import'
+    
+    if request.xhr?    
+      render :partial => 'import'
+    else
+      redirect_to :controller => 'dashboard', :action => 'index'
+    end
   end
   
 end
