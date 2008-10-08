@@ -11,7 +11,7 @@ class LoginController < ApplicationController
     if shopify_session.valid?
       session[:shopify] = shopify_session
       flash[:notice] = "Logged in to shopify store."
-      redirect_to '/import'
+      redirect_to '/word_press'
     else
       flash[:error] = "Could not log in to shopify store."
       redirect_to :action => 'index'
