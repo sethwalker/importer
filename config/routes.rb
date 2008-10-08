@@ -1,11 +1,10 @@
 ActionController::Routing::Routes.draw do |map|
-map.connect '/dashboard/:action/:blog/:article', :controller => 'dashboard'
-map.connect '', :controller => 'dashboard', :action => 'welcome'
-map.connect '/login/:action', :controller => 'login'
+  map.connect '/dashboard/:action/:blog/:article', :controller => 'dashboard'
+  map.connect '/login/:action', :controller => 'login'
 
-  map.connect '/import/:type/upload', :controller => 'import', :action => 'upload'
-  map.connect '/import/:type/create', :controller => 'import', :action => 'create'
-  map.connect '/import/:type/import', :controller => 'import', :action => 'import'
+  # map.connect '/import/:type/upload', :controller => 'import', :action => 'upload'
+  # map.connect '/import/:type/create', :controller => 'import', :action => 'create'
+  # map.connect '/import/:type/import', :controller => 'import', :action => 'import'
    
   map.connect '', :controller => 'dashboard', :action => 'index'
   map.connect '/login/:action', :controller => 'login'

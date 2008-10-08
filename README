@@ -1,5 +1,5 @@
-A simple aggregator demo application for the Shopify API
+Importer for Shopify.
 
-http://www.shopify.com/developers/
+http://importer.shopifyapps.com
 
-Replace the API Key and Secret in shopify.yml
+Written using the Shopify API: http://www.shopify.com/developers/

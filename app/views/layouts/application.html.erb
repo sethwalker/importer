@@ -15,36 +15,23 @@
   
   <div id="header">
     <h1><%= link_to 'Importer', '/' %></h1>
+
+	<p id="login-link">  
+		<% if current_shop %>
+	    	<span class="note">current shop</span> <%= link_to current_shop.url, current_shop.url, :id => 'shop_url' %> <span class="note">|</span> 					
+			<%= link_to 'logout', :controller => "login", :action => 'logout' %>
+		<% end %>
+	</p>
   </div>
   
-  <div id="subheader">
- 
-    <p id="login-link">
-      <% if current_shop %>
-        <span class="note">current shop</span> <%= current_shop.url %> <span class="note">|</span> <%= link_to 'logout', :controller => "login", :action => 'logout' %>
-      <% end %>
-    </p>
-  
-    <ul style="position: absolute;width: 700px">
-      <li onclick="document.location='/'"><%= link_to_unless_current 'Home', '/' %></li>
- 
-      <% if current_shop %>
-        <li onclick="document.location='<%= "http://#{current_shop.url}" %>'"><%= link_to 'Go to the shop', "http://#{current_shop.url}" %></li>
-      <% end %>
- 
-      <% if @content_for_navigation %>
-        <%= @content_for_navigation %>
-      <% end %>
-    </ul>
-  
-  </div>
- 
+
+
   <div id="container" class="clearfix">
     
     <% unless controller.class.name =~ /Login/ %>
       <ul id="tabs">
-        <%= link_to 'Dashboard', "/" %>
-        <%= link_to 'Import your Blog', "/import/new"  %>
+        <%= link_to 'Home', "/", :id => controller.controller_name =~ /dash/ ? 'current' : '' %>
+        <%= link_to 'Wordpress', '/word_press/new', :id => controller.controller_name =~ /word_press/ ? 'current' : ''  %>
       </ul>
     <% end %>
   
