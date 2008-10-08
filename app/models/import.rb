@@ -14,6 +14,8 @@ class Import < ActiveRecord::Base
       # Gets rid of a REXML exception, in my experience, this tag is always empty
       content.gsub!('<excerpt:encoded><![CDATA[]]></excerpt:encoded>', '')
       self.content = content
+    else
+      nil
     end
   end
   

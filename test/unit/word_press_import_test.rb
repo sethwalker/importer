@@ -34,12 +34,9 @@ class WordPressImportTest < ActiveSupport::TestCase
     ShopifyAPI::Page.any_instance.expects(:save).times(2)
     ShopifyAPI::Comment.any_instance.expects(:save).times(3)
     
-    @import.guess
-    guessed = @import.posts_guess + @import.pages_guess + @import.comments_guess
-    
+    @import.guess    
     @import.parse
     @import.save_data
-    total = @import.posts + @import.pages + @import.comments
     
     assert_equal 0, @import.skipped
   end

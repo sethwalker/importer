@@ -1,8 +1,10 @@
-require 'test_helper'
+require File.dirname(__FILE__) + '/../test_helper'
 
 class DashboardControllerTest < ActionController::TestCase
-  # Replace this with your real tests.
-  def test_truth
-    assert true
+  def test_index_returns_success
+    get :index
+    
+    assert_response :ok
+    assert_template 'index'
   end
 end

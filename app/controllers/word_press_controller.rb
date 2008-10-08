@@ -1,6 +1,6 @@
 class WordPressController < ApplicationController
 
-  around_filter :shopify_session, :except => 'welcome'
+  around_filter :shopify_session
 
   def index
     redirect_to :action => 'new'
@@ -16,15 +16,16 @@ class WordPressController < ApplicationController
 #        flash[:notice] = "Your WordPress Export file was successfully uploaded."
       else
         flash[:error] = "Error importing your blog." unless flash[:error]
+        #redirect or render?
         render :action => "new"
       end
     
     rescue NameError => e
       flash[:error] = "The type of import that you are attempting is not currently supported."
-      render :action => "new"
+      redirect_to :action => "new"
     rescue REXML::ParseException => e
       flash[:error] = "Error importing blog. Your file is not valid XML."      
-      render :action => "new"
+      redirect_to :action => "new"
     end
   end
     
