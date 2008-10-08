@@ -1,0 +1,7 @@
+<% if flash[:notice] %>
+	<h2 class="green" id="success">Blog successfully imported!</h2>
+	<p><%= flash[:notice] %></p>
+<% elsif flash[:error] %>
+	<h2 class="red" id="success">There was an error importing your blog</h2>
+	<p><%= flash[:error] %></p>
+<% end %>

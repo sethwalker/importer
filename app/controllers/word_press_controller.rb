@@ -13,7 +13,7 @@ class WordPressController < ApplicationController
       flash[:error] = "Error importing your blog. Wrong file type." unless @import.write_file      
       if @import.save
         @import.guess
-        flash[:notice] = "Your WordPress Export file was successfully uploaded."
+#        flash[:notice] = "Your WordPress Export file was successfully uploaded."
       else
         flash[:error] = "Error importing your blog." unless flash[:error]
         render :action => "new"
@@ -31,7 +31,7 @@ class WordPressController < ApplicationController
   def import
     begin
       # Find the import job 
-      @import = WordPressImport.find(params[:id])
+      @import = params[:id] ? WordPressImport.find(params[:id]) : WordPressImport.last_import
       @import.start_time = Time.now
       @import.parse
       @import.save_data
@@ -48,7 +48,8 @@ class WordPressController < ApplicationController
       flash[:notice] = "Blog successfully imported! You have imported " + help.pluralize(@import.posts, 'blog post') + ", " + help.pluralize(@import.pages, 'page') + ", and " + help.pluralize(@import.comments, 'comment') + ", with #{@import.skipped} skipped."      
     end
         
-    redirect_to :controller => 'dashboard', :action => 'index'
+#    redirect_to :controller => 'dashboard', :action => 'index'
+    render :partial => 'import'
   end
   
 end

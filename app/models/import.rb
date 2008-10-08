@@ -1,5 +1,3 @@
-#require "ftools"
-
 class Import < ActiveRecord::Base
 
   attr_accessible :content, :posts, :pages, :comments, :posts_guess, :pages_guess, :comments_guess, :source, :start_time, :finish_time
@@ -18,7 +16,7 @@ class Import < ActiveRecord::Base
       self.content = content
     end
   end
-
+  
   def guessed(type)
     case type
       when 'post' then self.posts_guess += 1
@@ -36,6 +34,10 @@ class Import < ActiveRecord::Base
     end
     self.save
   end
+      
+  def self.last_import
+    find :first, :order => "created_at DESC"
+  end      
       
   # Children of this class should overwrite these methods
   def parse 

@@ -54,18 +54,4 @@ class WordPressControllerTest < ActionController::TestCase
      assert_equal(File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press_import.xml').read, WordPressImport.find(:last).content)
    end
  
-   def test_import_redirect_to_dashboard_after_success
-     get :import, :type => 'word_press', :id => @import.id
-
-     assert flash[:notice]
-     assert_redirected_to :controller => 'dashboard'
-   end
-   
-   def test_import_id
-     get :import, :type => 'word_press', :id => 'garbage'
-
-     assert flash[:error]
-     assert_redirected_to :controller => 'dashboard'
-   end
-
 end

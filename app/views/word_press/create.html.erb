@@ -1,6 +1,19 @@
+<script type="text/javascript" charset="utf-8">
+	function status(){
+		$('status').update('<h3 class="message">Import in Progress</h3><p class="message"><img src="/images/spinner.gif" /></p>')
+	}
+</script>
+<div id="guess">
+	<h2 class="orange">WordPress Import</h2>
 
-<p>You will be importing <%= pluralize(@import.posts_guess, 'post') %>,  <%= pluralize(@import.pages_guess, 'page') %>, and <%= pluralize(@import.comments_guess, 'comment') %> from <a href="<%= @import.original_url %>"><%= @import.blog_title %></a>.</p>
+	<p>You will be importing <%= pluralize(@import.posts_guess, 'post') %>,  <%= 		pluralize(@import.pages_guess, 'page') %>, and <%= pluralize(@import.comments_guess, 'comment') %> from <a href="<%= @import.original_url %>"><%= @import.blog_title %></a>.</p>
+</div>
 
-<p>Do you want to continue?<br />
-
-<%= link_to 'Yes', :action => 'import', :type => params[:type], :id => @import.id %> or <%= link_to 'No', '/' %></p>
+<div id="status" class="light">
+	<% form_remote_tag :url => '/word_press/import', :loading => 'status()' do %>
+		<%= submit_tag 'Start Import' %> or <%= link_to 'Cancel', '/' %></p>
+	<% end %>
+	<div style="display: none" id="loading">
+		<p>LOADING</p>
+	</div>
+</div>
