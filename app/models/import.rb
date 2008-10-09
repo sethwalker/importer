@@ -1,7 +1,8 @@
 class Import < ActiveRecord::Base
 
-  attr_accessible :content, :posts, :pages, :comments, :posts_guess, :pages_guess, :comments_guess, :source, :start_time, :finish_time
+  attr_protected :site
   validates_presence_of  :content, :on => :create      # must have content just on creation of import
+  validates_presence_of  :site, :on => :save
 
   def source=(file_data)
     @file_data = file_data
@@ -36,10 +37,6 @@ class Import < ActiveRecord::Base
     end
     self.save
   end
-      
-  def self.last_import
-    find :first, :order => "created_at DESC"
-  end      
       
   # Children of this class should overwrite these methods
   def parse 

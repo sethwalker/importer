@@ -40,19 +40,18 @@ class ImportTest < ActiveSupport::TestCase
       @import.guessed('comment')
     end    
   end
-  
-  def test_last_import_should_return_last_import
-    assert_equal @import.id, Import.last_import.id
     
-    new_import = Import.new( :content => "testing" )
-    new_import.save
-    
-    assert_equal new_import.id, Import.last_import.id
-  end
-  
   def test_should_not_allow_creation_of_import_without_content
     @import = Import.new
     assert !@import.save
+  end
+  
+  def test_should_not_save_without_site
+    @import = Import.new( :content => "meaningless" )
+    assert !@import.save
+    
+    @import.site = "http://testing.com"
+    assert @import.save
   end
   
   def test_start_time_and_finish_time

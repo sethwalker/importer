@@ -38,6 +38,13 @@ class WordPressControllerTest < ActionController::TestCase
      assert_redirected_to :action => 'new'
    end   
 
+   def test_new_should_display_upload_form
+     get :new
+
+     assert_template 'new'
+     assert_tag :form, :descendant => { :tag => 'input', :attributes => { :type => 'file' } }
+   end
+
    def test_create_should_succeed
      WordPressImport.any_instance.expects(:guess).times(1)
      
@@ -46,6 +53,7 @@ class WordPressControllerTest < ActionController::TestCase
      end
      
      assert_equal(File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press_import.xml').read, WordPressImport.find(:last).content)
+     assert_equal session[:shopify].url, WordPressImport.find(:last).site
    end
 
    def test_create_should_not_succeed_with_invalid_file_type
@@ -62,54 +70,92 @@ class WordPressControllerTest < ActionController::TestCase
        post :create, :import => { :source => fixture_file_upload('../fixtures/files/word_press_import_typo.xml', 'text/xml') }
      end
      
-    assert flash[:error]
-    assert_template 'new'
-  end
-   
-  def test_new_should_display_upload_form
-    get :new
-
-    assert_template 'new'
-    assert_tag :form, :descendant => { :tag => 'input', :attributes => { :type => 'file' } }
-  end
-   
-  def test_import_should_succeed_over_html
-    post :import, :format => 'html'
+      assert flash[:error]
+      assert_template 'new'
+    end
     
-    assert flash[:notice]
-    assert_response :redirect
-    assert_redirected_to :controller => 'dashboard', :action => 'index'
-  end
+    def test_import_should_succeed_over_html
+      post :import, :format => 'html', :id => @import.id
+    
+      assert flash[:notice]
+      assert_response :redirect
+      assert_redirected_to :controller => 'dashboard', :action => 'index'
+    end
   
-  def test_import_failing_with_invalid_xml_over_html
-    @bad_import = WordPressImport.last_import
-    @bad_import.content = File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press_import_typo.xml').read
-    @bad_import.save
-    
-    post :import, :format => 'html'
+    def test_import_failing_with_invalid_xml_over_html
+      @import.content = File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press_import_typo.xml').read
+      @import.save
+      post :import, :id => @import.id, :format => 'html'
 
-    assert_response :redirect
-    assert_redirected_to :controller => 'dashboard', :action => 'index'
-    assert flash[:error]
-  end
-  
-  def test_import_should_succeed_over_js
-    post :import, :format => 'js'
+      assert_response :redirect
+      assert_redirected_to :controller => 'dashboard', :action => 'index'
+      assert flash[:error]
+    end
     
-    assert flash[:notice]
-    assert_response :ok
-    assert_template '_import'
-  end
-  
-  def test_import_failing_with_invalid_xml_over_js
-    @bad_import = WordPressImport.last_import
-    @bad_import.content = File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press_import_typo.xml').read
-    @bad_import.save
-    
-    post :import, :format => 'js'
+    def test_import_should_fail_with_no_id_over_html
+      post :import, :format => 'html'
 
-    assert_response :ok
-    assert_template '_import'
-    assert flash[:error]
+      assert_response :redirect
+      assert_redirected_to :controller => 'dashboard', :action => 'index'
+      assert flash[:error]      
+      
+      post :import, :format => 'html', :id => 'garbage'
+
+      assert_response :redirect
+      assert_redirected_to :controller => 'dashboard', :action => 'index'
+      assert flash[:error]      
+    end
+    
+    def test_import_should_fail_if_invalid_site_over_html
+      @import.site = 'garbage'
+      @import.save
+      post :import, :id => @import.id, :format => 'html'
+
+      assert_response :redirect
+      assert_redirected_to :controller => 'dashboard', :action => 'index'
+      assert flash[:error]
+    end
+  
+    def test_import_should_succeed_over_js
+      post :import, :id => @import.id, :format => 'js'
+    
+      assert flash[:notice]
+      assert_response :ok
+      assert_template '_import'
+    end
+  
+    def test_import_failing_with_invalid_xml_over_js
+      @import.content = File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press_import_typo.xml').read
+      @import.save
+    
+      post :import, :id => @import.id, :format => 'js'
+
+      assert_response :ok
+      assert_template '_import'
+      assert flash[:error]
+    end
+    
+    def test_import_should_fail_with_no_id_over_html
+      post :import, :format => 'js'
+
+      assert_response :ok
+      assert_template '_import'
+      assert flash[:error]      
+      
+      post :import, :id => 'garbage', :format => 'js'
+
+      assert_response :ok
+      assert_template '_import'
+      assert flash[:error]      
+    end
+    
+    def test_import_should_fail_if_invalid_site_over_html
+      @import.site = 'garbage'
+      @import.save
+      post :import, :id => @import.id, :format => 'js'
+
+      assert_response :ok
+      assert_template '_import'
+      assert flash[:error]
+    end
   end
-end

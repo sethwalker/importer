@@ -15,6 +15,7 @@
 	<br />
 	<div id="buttons">
 		<% form_remote_tag :url => '/word_press/import', :loading => 'status()' do %>
+			<input type="hidden" name="id" value="<%= @import.id%>" />
 			<%= submit_tag 'Start Import' %> or <%= link_to 'Cancel', '/' %></p>
 		<% end %>
 	</div>
