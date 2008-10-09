@@ -1,5 +1,16 @@
 class WordPressImport < Import
 
+  # Put it all together !
+  def execute!
+    if self.start_time.blank? # guard against executing the job multiple times
+      self.start_time = Time.now
+      self.parse
+      self.save_data
+      self.finish_time = Time.now
+      self.save
+    end
+  end
+
   # from import.rb
   def source=(file_data)
      @file_data = file_data if file_data.original_filename.split(".").last == 'xml'

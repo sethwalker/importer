@@ -303,6 +303,10 @@ h1.orange, h2.orange, h3.orange {
   color: #d9ecf8;
   padding: 10px;
 }
+
+.red {
+	color: #6e290b;
+}
  
 h1.blue, h2.blue, h3.blue {
   color: #218bce;
@@ -314,6 +318,7 @@ h1.blue, h2.blue, h3.blue {
   background: #faf7ea;
   border: 1px solid #e8e6d9;
   padding: 18px;
+  margin-bottom: 15px;
 }
  
 .dark {

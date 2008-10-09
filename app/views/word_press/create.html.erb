@@ -1,23 +1,30 @@
 <script type="text/javascript" charset="utf-8">
 	function status(){
-		$('status').update('<h2 class="green"><span class="message">Import in Progress...</span></h2><p class="message"><img src="/images/spinner.gif" /></p><p class="message">Your blog is currently being imported. Please wait...</p>')
+		$('confirm').insert( { before: '<div id="status" class="light"><h2 class="green"><span class="message">Import in Progress...</span></h2><p class="message"><img src="/images/spinner.gif" /></p><p class="message">Your blog is currently being imported...</p></div>' } )
+		$('confirm').remove()
 	}
 </script>
 
-<div id="status" class="light">
+<h2 class="orange">WordPress Import</h2>
 
+<div id="confirm" class="light">
 	<div id="guess">
-		<h2 class="orange">WordPress Import</h2>
-
-		<p>You will be importing <%= pluralize(@import.posts_guess, 'post') %>,  <%= 		pluralize(@import.pages_guess, 'page') %>, and <%= pluralize(@import.comments_guess, 'comment') %> from <a href="<%= @import.original_url %>"><%= @import.blog_title %></a>.</p>
+		<p>Starting this import will add <%= pluralize(@import.posts_guess, 'blog post') %>,  <%= pluralize(@import.comments_guess, 'comment') %>, and <%= 		pluralize(@import.pages_guess, 'page') %> from <a href="<%= @import.original_url %>"><%= @import.blog_title %></a> to a new Shopify blog in your shop.</p>
 	</div>
 
 	<br />
-
-	<% form_remote_tag :url => '/word_press/import', :loading => 'status()' do %>
-		<%= submit_tag 'Start Import' %> or <%= link_to 'Cancel', '/' %></p>
-	<% end %>
-	<div style="display: none" id="loading">
-		<p>LOADING</p>
+	<div id="buttons">
+		<% form_remote_tag :url => '/word_press/import', :loading => 'status()' do %>
+			<%= submit_tag 'Start Import' %> or <%= link_to 'Cancel', '/' %></p>
+		<% end %>
 	</div>
 </div>
+
+<div class="light">
+	<p>
+		The import may take a long time, depending on the size of your import file. If you are importing a blog with a lot of history (lots of articles and comments), then the uploading process may take a while.
+	</p>
+	<p>
+		Please be patient :)
+	</p>
+</div> 
