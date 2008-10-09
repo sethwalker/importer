@@ -68,7 +68,6 @@ class WordPressImport < Import
       p.save
     end
 
-
     @blog.save    
     articles.each do |a|  
       current_saved_date = a.published_at
