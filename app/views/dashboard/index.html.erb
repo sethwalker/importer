@@ -1,10 +1,12 @@
-<h2>Welcome to Importer!</h2>
+<h1 class="green">Welcome to Importer!</h1>
 
 <p>This application can help you move your existing content onto the <%= link_to 'Shopify', 'http://www.shopify.com' %> platform.</p>
 
 <h3>How to get started</h3>
-
-<p><%= link_to 'Login', '/login' %> to your shop. Choose a tab from above to import your content. Currently the Importer only supports WordPress blogs, but we hope that in the future you can import content from other blogging platforms and even other e-commerce platforms.</p>
+<div class="info">
+	<%= image_tag '/images/info.gif', :style => "float:left" %>
+	<p><%= link_to 'Login', '/login' %> to your shop. Choose a tab from above to import your content. Currently the Importer only supports WordPress blogs, but we hope that in the future you can import content from other blogging platforms and even other e-commerce platforms.</p>
+</div>
 
 <h3>About the App</h3>
 <p>This application was written using the <%= link_to 'Shopify API', 'http://www.shopify.com/developers' %> and has also been released as open source, so that you can contribute new import tools and to see some examples of how an application can use the API. It is available <%= link_to 'via GitHub', 'http://github.com/Shopify/importer/tree/master' %>.</p>

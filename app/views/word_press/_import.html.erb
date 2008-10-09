@@ -1,7 +1,7 @@
 <% if flash[:notice] %>
 	<h2 class="green" id="success">Blog successfully imported!</h2>
 	<p><%= flash[:notice] %></p>
-	<%= link_to 'Visit your new Shopify blog',  "http://#{current_shop.url}/admin/pages" %>
+	<%= link_to 'Visit your new Shopify blog',  "http://#{current_shop.url}/admin/pages", :class => 'blog' %>
 <% elsif flash[:error] %>
 	<h2 class="red" id="failure">Error importing your blog.</h2>
 	<p><%= flash[:error] %></p>
