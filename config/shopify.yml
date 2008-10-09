@@ -3,26 +3,14 @@
 # <YourShopURL>/admin/api 
 #   (e.g. "http://shopname.myshopify.com/admin/api")
 
-# development:
-#   api_key: 93348c560dba6dac61dfcc117e79054c
-#   secret: 0269de94b38eebce27c86618ca93541e
-# 
-# test:
-#   api_key: 93348c560dba6dac61dfcc117e79054c
-#   secret: 0269de94b38eebce27c86618ca93541e
-# 
-# production:
-#   api_key: 93348c560dba6dac61dfcc117e79054c
-#   secret: 0269de94b38eebce27c86618ca93541e  
-
 development:
-  api_key: 21c7a5add99766035f0d1a594f306d84
-  secret: c7fd5bd31b28cc8e272bb93e1bd74898
+  api_key: 93348c560dba6dac61dfcc117e79054c
+  secret: 0269de94b38eebce27c86618ca93541e
 
 test:
-  api_key: 21c7a5add99766035f0d1a594f306d84
-  secret: c7fd5bd31b28cc8e272bb93e1bd74898
+  api_key: 93348c560dba6dac61dfcc117e79054c
+  secret: 0269de94b38eebce27c86618ca93541e
 
 production:
-  api_key: 21c7a5add99766035f0d1a594f306d84
-  secret: c7fd5bd31b28cc8e272bb93e1bd74898
+  api_key: 93348c560dba6dac61dfcc117e79054c
+  secret: 0269de94b38eebce27c86618ca93541e  
