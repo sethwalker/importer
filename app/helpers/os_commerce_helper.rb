@@ -1,0 +1,2 @@
+module OsCommerceHelper
+end
