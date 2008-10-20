@@ -48,7 +48,7 @@ class WordPressController < ApplicationController
     rescue NameError => e
       flash[:error] = "The type of import that you are attempting may not be currently supported."
     else
-      flash[:notice] = "Blog successfully imported! You have imported " + help.pluralize(@import.posts, 'blog post') + ", " + help.pluralize(@import.pages, 'page') + ", and " + help.pluralize(@import.comments, 'comment') + ", with #{@import.skipped} skipped."      
+      flash[:notice] = "Blog successfully imported! You have imported " + help.pluralize(@import.adds.to_hash['post'], 'blog post') + ", " + help.pluralize(@import.adds.to_hash['page'], 'page') + ", and " + help.pluralize(@import.adds.to_hash['comment'], 'comment') + ", with #{@import.skipped} skipped."      
     end
     
     respond_to do |format|

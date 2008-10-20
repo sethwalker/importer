@@ -35,6 +35,7 @@
       <ul id="tabs">
         <%= link_to 'Home', "/", :id => controller.controller_name =~ /dash/ ? 'current' : '' %>
         <%= link_to 'Wordpress', '/word_press/new', :id => controller.controller_name =~ /word_press/ ? 'current' : ''  %>
+        <%= link_to 'osCommerce', '/os_commerce/new', :id => controller.controller_name =~ /os_commerce/ ? 'current' : ''  %>
       </ul>
     <% end %>
   

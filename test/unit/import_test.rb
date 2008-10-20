@@ -3,11 +3,13 @@ require File.dirname(__FILE__) + '/../test_helper'
 class ImportTest < ActiveSupport::TestCase
   
   def setup
-    @import = imports(:word_press)
+    # @import = imports(:word_press)
+    @import = WordPressImport.new(:site => 'localhost.myshopify.com', :content => File.read(File.dirname(__FILE__) + '/../fixtures/files/word_press/word_press_import.xml'))
+    @import.save
   end
     
   def test_saving_model_should_write_file_to_db
-    @data = File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press_import.xml')
+    @data = File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press/word_press_import.xml')
     @original_data = @data.read
     @new_import = Import.new( :content => @original_data)
     @new_import.save
@@ -21,23 +23,23 @@ class ImportTest < ActiveSupport::TestCase
   end
   
   def test_should_be_able_to_add_and_guess_posts_pages_and_comments
-    assert_difference '@import.posts', +1 do
-      @import.added('post')
+    assert_difference "@import.adds['post']", +1 do
+      @import.increase_add('post')
     end    
-    assert_difference '@import.pages', +1 do
-      @import.added('page')
+    assert_difference "@import.adds['page']", +1 do
+      @import.increase_add('page')
     end
-    assert_difference '@import.comments', +1 do
-      @import.added('comment')
+    assert_difference "@import.adds['comment']", +1 do
+      @import.increase_add('comment')
     end    
-    assert_difference '@import.posts_guess', +1 do
-      @import.guessed('post')
+    assert_difference "@import.guesses['post']", +1 do
+      @import.increase_guess('post')
     end    
-    assert_difference '@import.pages_guess', +1 do
-      @import.guessed('page')
+    assert_difference "@import.guesses['page']", +1 do
+      @import.increase_guess('page')
     end
-    assert_difference '@import.comments_guess', +1 do
-      @import.guessed('comment')
+    assert_difference "@import.guesses['comment']", +1 do
+      @import.increase_guess('comment')
     end    
   end
     

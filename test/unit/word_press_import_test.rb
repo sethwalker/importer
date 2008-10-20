@@ -6,7 +6,7 @@ class WordPressImportTest < ActiveSupport::TestCase
   def setup
     @import = WordPressImport.new    
     
-    @import.content = File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press_import.xml').read
+    @import.content = File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press/word_press_import.xml').read
     @import.save    
   end
   

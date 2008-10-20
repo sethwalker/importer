@@ -1,7 +1,7 @@
-<h1 class="orange">WordPress Import</h1>
+<h1 class="orange">osCommerce Import</h1>
 
 <div class="light">
-	<p>Here you can import all of your content from a WordPress blog into a Shopify blog. With this tool you can import all posts, comments, and static pages.</p>
+	<p>Here you can import all of your content from an osCommerce shop into a Shopify shop. With this tool you can import all of your products into Shopify.</p>
 
 	<% form_for :import, @import, :url => { :action => 'create', :id => params[:id] }, :html => { :multipart => true } do |f| %>
 	  <%= f.file_field :source %>
@@ -11,7 +11,7 @@
 
 <div class="box">
 	<div class="wrapper">
-<p>You will need to upload your WordPress Export file, which will contain all of the data necessary for the import. The instructions are below:</p>
+<p>You will need to upload your osCommerce Export file, which will contain all of the data necessary for the import. The instructions are below:</p>
 </div>
 </div>
 

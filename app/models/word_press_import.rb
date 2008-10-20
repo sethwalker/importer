@@ -3,6 +3,8 @@ class WordPressImport < Import
   # Put it all together !
   def execute!
     if self.start_time.blank? # guard against executing the job multiple times
+      self.type = 'WordPress'
+      
       self.start_time = Time.now
       self.parse
       self.save_data
@@ -26,6 +28,23 @@ class WordPressImport < Import
   
   def skipped
     (self.posts_guess + self.pages_guess + self.comments_guess) - (self.posts + self.pages + self.comments)
+  end
+  
+
+  def increase_guess(type)
+    guesses = self.guesses || Hash.new
+    guesses[type] += 1
+
+    self.guesses = guesses.to_s
+    self.save
+  end
+
+  def increase_add(type)
+    adds = self.added || Hash.new
+    adds[type] += 1
+
+    self.added = adds.to_s
+    self.save
   end
 
   def guess

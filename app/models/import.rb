@@ -3,6 +3,17 @@ class Import < ActiveRecord::Base
   attr_protected :site
   validates_presence_of  :content, :on => :create      # must have content just on creation of import
   validates_presence_of  :site, :on => :save
+  
+  before_create :init_hash
+  
+  serialize :adds
+  serialize :guesses
+
+  def init_hash
+    puts "===== INIT HASH"
+    self.adds = Hash.new
+    self.guesses = Hash.new
+  end
 
   def source=(file_data)
     @file_data = file_data
@@ -20,22 +31,10 @@ class Import < ActiveRecord::Base
     end
   end
   
-  def guessed(type)
-    case type
-      when 'post' then self.posts_guess += 1
-      when 'page' then self.pages_guess += 1
-      when 'comment' then self.comments_guess += 1
-    end
-    self.save
+  def increase_guess(type)
   end
 
-  def added(type)
-    case type
-      when 'post' then self.posts = self.posts + 1
-      when 'page' then self.pages = self.pages + 1
-      when 'comment' then self.comments = self.comments + 1
-    end
-    self.save
+  def increase_add(type)
   end
       
   # Children of this class should overwrite these methods

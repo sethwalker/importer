@@ -8,20 +8,23 @@ class OsCommerceImportTest < ActiveSupport::TestCase
     @import = OsCommerceImport.new    
 
     @import.content = File.open(File.dirname(__FILE__) + '/../fixtures/files/os_commerce/import.csv').read
+    @import.site = 'localhost'
     @import.save    
   end
 
-#   def test_save_data
-#     # mocks
-#     
-#     @import.parse    
-#     @import.save_data
-#   end
-# 
+  def test_save_data
+    ShopifyAPI::Product.any_instance.expects(:save).times(27)
+    ShopifyAPI::Image.any_instance.expects(:save).times(27)
+    ShopifyAPI::Variant.any_instance.expects(:save).times(27)
+    
+    assert @import.execute!('localhost')    
+  end
+
   def test_parse
     OsCommerceImport.any_instance.expects(:add_product).times(27)
     
-    @import.parse
+    assert @import.parse
+    assert @import.save
   end
 # 
 #   def test_skipped
