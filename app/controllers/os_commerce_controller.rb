@@ -38,11 +38,11 @@ class OsCommerceController < ApplicationController
       unless @import.site == current_shop.url
         raise ActiveRecord::RecordNotFound
       end
-      @import.execute!('http://localhost/os-commerce') 
+      @import.execute!() 
     # rescue REXML::ParseException => e
     #   flash[:error] = "Error importing your shop. Your import file is not a valid CSV file."
-    # rescue ActiveResource::ResourceNotFound => e
-    #   flash[:error] = "Error importing your shop. The data could not be saved."
+    rescue ActiveResource::ResourceNotFound => e
+      flash[:error] = "Error importing your shop. The data could not be saved."
     # rescue ActiveResource::ServerError => e
     #   flash[:error] = "Error importing your shop. The data could not be saved."
     # rescue ActiveResource::ClientError => e

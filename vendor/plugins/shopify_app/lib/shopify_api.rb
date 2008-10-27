@@ -170,6 +170,10 @@ module ShopifyAPI
     def remove_from_collection(collection)
       collection.remove_product(self)
     end
+    
+    def variants
+      ProductVariant.find(:all, :params => { :product_id => id })
+    end
   end
   
   class Variant < ActiveResource::Base

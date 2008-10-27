@@ -10,7 +10,6 @@ class Import < ActiveRecord::Base
   serialize :guesses
 
   def init_hash
-    puts "===== INIT HASH"
     self.adds = Hash.new
     self.guesses = Hash.new
   end
@@ -18,7 +17,7 @@ class Import < ActiveRecord::Base
   def source=(file_data)
     @file_data = file_data
   end
-
+  
   def write_file
     if @file_data
       content = @file_data.read 
