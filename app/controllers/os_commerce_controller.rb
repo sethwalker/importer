@@ -35,10 +35,10 @@ class OsCommerceController < ApplicationController
     begin
       # Find the import job 
       @import = OsCommerceImport.find(params[:id])
-      unless @import.site == current_shop.url
-        raise ActiveRecord::RecordNotFound
-      end
-      @import.execute!() 
+
+      raise ActiveRecord::RecordNotFound if @import.site != current_shop.url
+
+      @import.execute!
     # rescue REXML::ParseException => e
     #   flash[:error] = "Error importing your shop. Your import file is not a valid CSV file."
     rescue ActiveResource::ResourceNotFound => e

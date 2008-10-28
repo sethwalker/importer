@@ -4,8 +4,8 @@
 	<p>Here you can import all of your content from an osCommerce shop into a Shopify shop. With this tool you can import all of your products into Shopify.</p>
 
 	<% form_for :import, @import, :url => { :action => 'create', :id => params[:id] }, :html => { :multipart => true } do |f| %>
-    Please enter the URL of your osCommerce shop: <%= f.text_field :base_url %><br />
-	  <%= f.file_field :source %><br >
+    URL of your osCommerce shop: <%= f.text_field :base_url %><br />
+	  OsCommerce export file (instructions below): <%= f.file_field :source %><br >
 	  <%= submit_tag "Submit" %>
 	<% end %>
 </div>

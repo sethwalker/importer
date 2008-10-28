@@ -324,6 +324,7 @@ class OsCommerceImport < Import
   end
   
   def self.existent_url?(url)
+    return if url.blank?
     uri = URI.parse(url)
     http_conn = Net::HTTP.new(uri.host, uri.port)
     resp, data = http_conn.head(uri.path , nil)
