@@ -8,6 +8,7 @@ class OsCommerceImportTest < ActiveSupport::TestCase
     @import = OsCommerceImport.new    
 
     @import.content = File.open(File.dirname(__FILE__) + '/../fixtures/files/os_commerce/import.csv').read
+    @import.base_url = 'localhost/os-commerce'
     @import.site = 'localhost'
     @import.save    
   end
@@ -25,6 +26,10 @@ class OsCommerceImportTest < ActiveSupport::TestCase
     
     assert @import.parse
     assert @import.save
+  end
+  
+  def test_parsing
+    assert @import.parse    
   end
 # 
 #   def test_skipped

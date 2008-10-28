@@ -1,5 +1,16 @@
 require 'csv'
 
+class Array
+  # The accumulation is a bit messy but it works ;-)
+  def sequence(i = 0, *a)
+    return [a] if i == size
+    self[i].map {|x|
+      sequence(i+1, *(a + [x]))
+    }.inject([]) {|m, x| m + x}     # this has to be used instead of flatten so I can sequence something
+                                    # like [[[4]]] -> [[[4]]] rather than -> [[4]]; ruby 1.9 has an option for flatten
+  end
+end
+
 class OsCommerceImport < Import
 
   # Put it all together !
@@ -56,27 +67,42 @@ class OsCommerceImport < Import
     # map the csv headers to the cells of each row
     rows = row_data.map {|row| Hash[*headers.zip(row).flatten] }
 
-    rows.each do |row|
-     add_product(row)
+    rows.each_with_index do |row, index|
+      store_property_values(row) if index == 0
+      add_product(row)
     end
   end
 
   def save_data
+    save_products
+    save_images
+    save_variants
+    save_collections
+    save_collects
+  end
+  
+  def save_products
     products.each do |product|
       if product.save
         # self.added('product')
         RAILS_DEFAULT_LOGGER.debug "Saving product #{product.title}...."
       end
     end
+  end
     
+  def save_images
+    debugger
     product_images.each do |image, product|
       image.prefix_options[:product_id] = product.id
-      if image.save
+
+      if OsCommerceImport.existent_url?(image.src.to_s) and image.save
         RAILS_DEFAULT_LOGGER.debug "Saving image....#{image.src}"
         # self.added('image')
       end
     end
+  end
 
+  def save_variants
     variants.each do |variant, product|
       if default = ShopifyAPI::Product.find(product.id).attributes['variants'].find { |v| v.title == 'Default' }
         default.attributes.update(variant.attributes)
@@ -90,14 +116,18 @@ class OsCommerceImport < Import
         RAILS_DEFAULT_LOGGER.debug "Saving variant....#{variant.title}"      
       end
     end
+  end
     
+  def save_collections
     collections.each do |collection|
       if collection.save
         # self.added('collection')
         RAILS_DEFAULT_LOGGER.debug "Saving collection....#{collection.title}"      
       end
     end
-    
+  end
+  
+  def save_collects
     collects.each do |collect|
       collect.product_id = collect.product_id.id
       collect.collection_id = collect.collection_id.id
@@ -107,7 +137,6 @@ class OsCommerceImport < Import
         RAILS_DEFAULT_LOGGER.debug "Saving collect....#{collect}"              
       end
     end
-        
   end
 
   private  
@@ -135,6 +164,10 @@ class OsCommerceImport < Import
   def variants
     @variants ||= Hash.new
   end
+  
+  def possible_property_values
+    @property_values ||= Hash.new
+  end
 
   def add_product(row)
     get_product_attributes(row)
@@ -154,7 +187,13 @@ class OsCommerceImport < Import
 
     # image
     @image_url = "#{base_url}/images/#{row['v_products_image']}"
-        
+    if not OsCommerceImport.existent_url?(@image_url)
+      @image_url = "#{base_url}/catalog/images/#{row['v_products_image']}" #try this...
+      if not OsCommerceImport.existent_url?(@image_url)
+        @image_url = ""
+      end
+    end
+ 
     # collections
     @collection_name = if not row['v_categories_name_1'].blank? then row['v_categories_name_1'] else row['v_categories_name_1_1'] end
     
@@ -175,45 +214,78 @@ class OsCommerceImport < Import
     if number_of_variants_for(row) <= 1
       create_default_variant(row, product)
     else # more than one variant
+      actual_property_values = Hash.new
       
-      # put each type of variant in an array
-      # eg. [blue, red, green], [deluxe, standard], [4 mb, 6 mb, 8 mb]
-      # Regexp.new(/v_attribute_values_price_(.*)_(.*)/).match(row)
-      # @first = Regexp.last_match(1)
-      # @last = Regexp.last_match(2)
+      possible_property_values.each do |property_name, property_values|
+        property_name_number = property_name.scan(/v_attribute_options_name_(.)_1/).to_s
+
+        property_values.each do |property_value|
+          property_value_number = property_value.scan(/v_attribute_values_name_#{property_name_number}_(.)_1/).to_s
+          if price = row["v_attribute_values_price_#{property_name_number}_#{property_value_number}"] and not price.blank?
+            # we have a variant
+            actual_property_values["v_attribute_values_price_#{property_name_number}_#{property_value_number}"] = price
+          end
+        end
+      end
       
+      mapping_values = Hash.new
+      # set up the proper hash for mapping
+      possible_property_values.each do |property_name, property_values|
+        property_name_number = property_name.scan(/v_attribute_options_name_(.)_1/).to_s
+
+        current_matches = actual_property_values.keys.join(" ").scan(/v_attribute_values_price_#{property_name_number}_./)
+        
+        current_matches.each do |match|
+          property_value_number = match.scan(/v_attribute_values_price_#{property_name_number}_(.)/).to_s
+          current_title = row["v_attribute_values_name_#{property_name_number}_#{property_value_number}_1"]
+          current_price = actual_property_values["v_attribute_values_price_#{property_name_number}_#{property_value_number}"]
+          
+          if not mapping_values[property_name_number]
+            mapping_values[property_name_number] = Hash.new
+          end
+          
+          mapping_values[property_name_number].update( { current_title => current_price } )
+          
+        end
+      end
       
+      # DO the mapping
+      titles = Array.new
+      prices = Array.new
+      mapping_values.values.map(&:keys).sequence.each do |arr|
+        titles << arr.join(" ")
+      end
       
-      # recursively send each array to a map_2_arrays_method which will map each variant with each other variant
-      # creates array1.size * array2.size * ... * arrayn.size variants
-      # eg. above example 3 * 2 * 3 = 18 variants
+      mapping_values.values.map(&:values).sequence.each do |arr|
+        if arr.size == 1
+          prices << arr.first.to_f
+        else
+          prices << arr.inject {|sum, n| sum.to_f + n.to_f }
+        end
+      end   
       
+      @weight = row['v_products_weight']
+      @sku = row['v_products_model']
+      @base_price = row['v_products_price']
+      
+      0.upto(titles.size-1) do |index|
+        create_variant(titles[index], @base_price.to_f + prices[index], @weight, @sku, product)
+      end
       
     end  
   end
-  
-  def create_variant(row, heder, value, product)
-    Regexp.new(/v_attribute_values_price_(.*)_(.*)/).match(header)
-    @first = Regexp.last_match(1)
-    @last = Regexp.last_match(2)
-    @price = value
-  
-    @title = row["v_attribute_values_name_#{@first}_#{@last}_1"]
-    @price = row['v_products_price'] + @price
-    @weight = row['v_products_weight']
-    @sku = row['v_products_model']  #### NEEDS COUNTER
-    @os_commerce_property_name = row["v_attribute_options_name_#{@first}_1"]
-  
-    variants[ShopifyAPI::Variant.new( :title => @title, :price => @price, :grams => @weight, :sku => @sku, :property_name => @os_commerce_property_name )] = product
-  end
-  
+        
   def create_default_variant(row, product)
     @title = 'Default'
     @price = row['v_products_price']
     @weight = row['v_products_weight']
     @sku = row['v_products_model']
-
-    variants[ShopifyAPI::Variant.new( :title => @title, :price => @price, :grams => @weight, :sku => @sku )] = product
+    
+    create_variant(@title, @price, @weight, @sku, product)
+  end
+  
+  def create_variant(title, price, grams, sku, product)
+    variants[ShopifyAPI::Variant.new( :title => title, :price => price, :grams => grams, :sku => sku )] = product
   end
   
   def map_variants_for(product)
@@ -240,6 +312,22 @@ class OsCommerceImport < Import
     end
     
     collects << ShopifyAPI::Collect.new(:collection_id => collection, :product_id => product)
+  end
+  
+  def store_property_values(row)
+    property_names = row.keys.join(" ").scan(/v_attribute_options_name_._1/)
+
+    property_names.each do |property_name|
+      property_name_number = property_name.scan(/v_attribute_options_name_(.)_1/).to_s
+      possible_property_values[property_name] = row.keys.join(" ").scan(/v_attribute_values_name_#{property_name_number}_._1/)
+    end            
+  end
+  
+  def self.existent_url?(url)
+    uri = URI.parse(url)
+    http_conn = Net::HTTP.new(uri.host, uri.port)
+    resp, data = http_conn.head(uri.path , nil)
+    resp.code == "200"
   end
   
 end
