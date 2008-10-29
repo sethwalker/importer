@@ -1,8 +1,10 @@
 class WordPressImport < Import
 
   # Put it all together !
-  def execute!
+  def execute!(site)
     if self.start_time.blank? # guard against executing the job multiple times
+      ShopifyAPI::Product.superclass.site = site # this is for DJ, it can't seem to find the site at execution time unless
+      
       self.type = 'WordPress'
       
       self.start_time = Time.now
@@ -27,26 +29,10 @@ class WordPressImport < Import
   end
   
   def skipped
-    (self.posts_guess + self.pages_guess + self.comments_guess) - (self.posts + self.pages + self.comments)
+    #(self.posts_guess + self.pages_guess + self.comments_guess) - (self.posts + self.pages + self.comments)
+    0
   end
   
-
-  def increase_guess(type)
-    guesses = self.guesses || Hash.new
-    guesses[type] += 1
-
-    self.guesses = guesses.to_s
-    self.save
-  end
-
-  def increase_add(type)
-    adds = self.added || Hash.new
-    adds[type] += 1
-
-    self.added = adds.to_s
-    self.save
-  end
-
   def guess
     # Loop through each <item> tag in the file
     REXML::XPath.match(xml, 'rss/channel/item').each do |node|
@@ -65,7 +51,7 @@ class WordPressImport < Import
     
   def parse
     # Create a new blog with the title from Wordpress
-    @blog = ShopifyAPI::Blog.new(:title => blog_title)   
+    @blog = ShopifyAPI::Blog.new(:title => blog_title)
 
     # Loop through each <item> tag in the file
     REXML::XPath.match(xml, 'rss/channel/item').each do |node|
@@ -84,7 +70,9 @@ class WordPressImport < Import
       p.save
       
       p.published_at = current_saved_date
-      p.save
+      if p.save
+        added('page')
+      end
     end
 
     @blog.save    
@@ -94,14 +82,18 @@ class WordPressImport < Import
       a.save
       
       a.published_at = current_saved_date
-      a.save
+      if a.save
+        added('post')
+      end
     end
 
     # comments is a hash of [ShopifyAPI::Comment => ShopifyAPI::Article]
-    comments.each do |key, value|
-      key.blog_id = @blog.id
-      key.article_id = value.id
-      key.save
+    comments.each do |comment, article|
+      comment.blog_id = @blog.id
+      comment.article_id = article.id
+      if comment.save
+        added('comment')
+      end
     end
   end
   
@@ -125,8 +117,6 @@ class WordPressImport < Import
   def add_page(node)
     get_attributes(node)    
     pages << ShopifyAPI::Page.new( :title => @title, :body => @body, :author => @author, :published_at => @pub_date )
-
-    self.added('page')
   end
   
   def add_article(node)
@@ -139,8 +129,6 @@ class WordPressImport < Import
       article = ShopifyAPI::Article.new( :title => @title, :body => @body, :author => @author, :published_at => 0 )
       articles << article
     end
-
-    self.added('post')   
     
     add_comments(node.elements.select {|e| e.name == "comment" } , article)
   end
@@ -161,8 +149,6 @@ class WordPressImport < Import
       pub_date = @comment_root_node.elements.select { |e| e.name == "comment_date" }.first.text
 
       comments[ShopifyAPI::Comment.new( :body => body, :author => author, :email => email, :published_at => pub_date )] = article
-
-      self.added('comment')
     end    
   end
   

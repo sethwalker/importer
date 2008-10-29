@@ -1,20 +1,13 @@
-<script type="text/javascript" charset="utf-8">
-	function status(){
-		$('confirm').insert( { before: '<div id="status" class="light"><h2 class="green"><span class="message">Import in Progress...</span></h2><p class="message"><img src="/images/spinner.gif" /></p><p class="message">Your shop is currently being imported...</p></div>' } )
-		$('confirm').remove()
-	}
-</script>
-
 <h1 class="orange">osCommerce Import</h1>
 
 <div id="confirm" class="light">
 	<div id="guess">
-		<p>Starting this import will add blah blah fill in.</p>
+	  <p>This import job will add <%= pluralize(@import.guesses['product'], 'product') %> to <a href="http://<%= current_shop.url %>">your Shopify shop</a> from <a href="<%= @import.base_url%>">your osCommerce shop</a>.</p>		
 	</div>
 
 	<br />
 	<div id="buttons">
-		<% form_remote_tag :url => '/os_commerce/import', :loading => 'status()' do %>
+		<% form_remote_tag :url => '/os_commerce/import' do %>
 			<input type="hidden" name="id" value="<%= @import.id%>" />
 			<%= submit_tag 'Start Import' %> or <%= link_to 'Cancel', '/' %></p>
 		<% end %>

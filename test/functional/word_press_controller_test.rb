@@ -107,7 +107,7 @@ class WordPressControllerTest < ActionController::TestCase
     end
     
     def test_import_should_fail_if_invalid_site_over_html
-      @import.site = 'garbage'
+      @import.shop_url = 'garbage'
       @import.save
       post :import, :id => @import.id, :format => 'html'
 
@@ -150,7 +150,7 @@ class WordPressControllerTest < ActionController::TestCase
     end
     
     def test_import_should_fail_if_invalid_site_over_html
-      @import.site = 'garbage'
+      @import.shop_url = 'garbage'
       @import.save
       post :import, :id => @import.id, :format => 'js'
 

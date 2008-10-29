@@ -86,7 +86,9 @@ module Delayed
           # We did not get the lock, some other worker process must have
           logger.warn "* [JOB] failed to aquire exclusive lock for #{job.name}"
         rescue StandardError => e 
-          job.reschedule e.message        
+          RAILS_DEFAULT_LOGGER.debug "==== e is #{e.inspect}"
+          RAILS_DEFAULT_LOGGER.debug "== e's backtrace #{e.backtrace}"
+          job.reschedule e.message
           logger.error "* [JOB] #{job.name} failed with #{e.class.name}: #{e.message} - #{job.attempts} failed attempts"
           logger.error(e)
           return job

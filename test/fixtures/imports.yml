@@ -1,7 +1,7 @@
 word_press:
   created_at: <%= Time.now.utc %>
   updated_at: <%= Time.now.utc %>
-  site: localhost.myshopify.com
+  shop_url: localhost.myshopify.com
   adds: {}
   guesses: {}
   content: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>

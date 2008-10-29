@@ -9,7 +9,7 @@ class OsCommerceImportTest < ActiveSupport::TestCase
 
     @import.content = File.open(File.dirname(__FILE__) + '/../fixtures/files/os_commerce/import.csv').read
     @import.base_url = 'localhost/os-commerce'
-    @import.site = 'localhost'
+    @import.shop_url = 'localhost'
     @import.save    
   end
 

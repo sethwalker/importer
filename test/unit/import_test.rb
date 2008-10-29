@@ -4,7 +4,7 @@ class ImportTest < ActiveSupport::TestCase
   
   def setup
     # @import = imports(:word_press)
-    @import = WordPressImport.new(:site => 'localhost.myshopify.com', :content => File.read(File.dirname(__FILE__) + '/../fixtures/files/word_press/word_press_import.xml'))
+    @import = WordPressImport.new(:shop_url => 'localhost.myshopify.com', :content => File.read(File.dirname(__FILE__) + '/../fixtures/files/word_press/word_press_import.xml'))
     @import.save
   end
     
@@ -52,7 +52,7 @@ class ImportTest < ActiveSupport::TestCase
     @import = Import.new( :content => "meaningless" )
     assert !@import.save
     
-    @import.site = "http://testing.com"
+    @import.shop_url = "http://testing.com"
     assert @import.save
   end
   

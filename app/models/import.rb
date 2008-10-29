@@ -1,8 +1,8 @@
 class Import < ActiveRecord::Base
 
-  attr_protected :site
+  attr_protected :shop_url
   validates_presence_of  :content, :on => :create      # must have content just on creation of import
-  validates_presence_of  :site, :on => :save
+  validates_presence_of  :shop_url, :on => :save
   
   before_create :init_hash
   
@@ -30,10 +30,14 @@ class Import < ActiveRecord::Base
     end
   end
   
-  def increase_guess(type)
+  def guessed(type)
+    if not self.guesses[type] then self.guesses[type] = 1 else self.guesses[type] += 1 end
+    self.save
   end
 
-  def increase_add(type)
+  def added(type)
+    if not self.adds[type] then self.adds[type] = 1 else self.adds[type] += 1 end
+    self.save
   end
       
   # Children of this class should overwrite these methods

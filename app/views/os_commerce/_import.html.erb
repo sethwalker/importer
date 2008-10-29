@@ -1,8 +1,10 @@
-<% if flash[:notice] %>
-	<h2 class="green" id="success">Shop successfully imported!</h2>
-	<p><%= flash[:notice] %></p>
-	<%= link_to 'Visit your new Shopify shop',  "http://#{current_shop.url}/", :class => 'shop' %>
-<% elsif flash[:error] %>
-	<h2 class="red" id="failure">Error importing your shop.</h2>
-	<p><%= flash[:error] %></p>
-<% end %>
+<div id="status" class="light">
+  <h2 class="green">
+    <span class="message">Import in Progress </span>
+    <img src="/images/spinner.gif" />
+  </h2>
+  <p class="message">
+    Your import job is currently in queue position blank of blank, we will send you an email once the job is finished.
+  </p>
+  <p class="message">Your shop is currently being imported...</p>
+</div>

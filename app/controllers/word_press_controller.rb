@@ -12,7 +12,7 @@ class WordPressController < ApplicationController
   def create
     begin
       @import = WordPressImport.new(params[:import])
-      @import.site = current_shop.url
+      @import.shop_url = current_shop.url
 
       flash[:error] = "Error importing your blog. Wrong file type." unless @import.write_file
       if @import.save
@@ -35,10 +35,10 @@ class WordPressController < ApplicationController
     begin
       # Find the import job 
       @import = WordPressImport.find(params[:id])
-      unless @import.site == current_shop.url
-        raise ActiveRecord::RecordNotFound
-      end
-      @import.execute! 
+      
+      raise ActiveRecord::RecordNotFound if @import.shop_url != current_shop.url
+
+      @import.send_later(:execute!, session[:shopify].site)
     rescue REXML::ParseException => e
       flash[:error] = "Error importing blog. Your file is not valid XML."
     rescue ActiveResource::ResourceNotFound => e

@@ -9,7 +9,7 @@
 
 <div id="confirm" class="light">
 	<div id="guess">
-		<p>Starting this import will add <%= pluralize(@import.posts_guess, 'blog post') %>,  <%= pluralize(@import.comments_guess, 'comment') %>, and <%= 		pluralize(@import.pages_guess, 'page') %> from <a href="<%= @import.original_url %>"><%= @import.blog_title %></a> to a new Shopify blog in your shop.</p>
+		<p>This import job will add <%= pluralize(@import.guesses['post'], 'blog post') %>,  <%= pluralize(@import.guesses['comment'], 'comment') %>, and <%= 		pluralize(@import.guesses['page'], 'page') %> from <a href="<%= @import.original_url %>"><%= @import.blog_title %></a> to a new Shopify blog in your shop.</p>
 	</div>
 
 	<br />

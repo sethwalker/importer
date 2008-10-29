@@ -6,4 +6,3 @@ ShopifyAPI::Session.setup(YAML.load_file("#{RAILS_ROOT}/config/shopify.yml")[RAI
 
 ActionController::Base.send :include, ShopifyLoginProtection
 ActionController::Base.send :helper_method, :current_shop
-

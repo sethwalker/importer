@@ -1,5 +1,9 @@
 require 'csv'
+require 'uri'
+require 'net/http'
 
+# From: http://www.rubyonrailsblog.com/articles/2006/08/31/permutations-in-ruby-can-be-fun (in the comments)
+# Author: Brian Mitchell
 class Array
   # The accumulation is a bit messy but it works ;-)
   def sequence(i = 0, *a)
@@ -11,11 +15,14 @@ class Array
   end
 end
 
+
 class OsCommerceImport < Import
 
   # Put it all together !
-  def execute!()
+  def execute!(site)
     if self.start_time.blank? # guard against executing the job multiple times
+      ShopifyAPI::Product.superclass.site = site # this is for DJ, it can't seem to find the site at execution time unless
+      
       self.type = 'OsCommerce'
       
       self.start_time = Time.now
@@ -35,38 +42,18 @@ class OsCommerceImport < Import
   end
 
   def guess
+    rows = parse_content(content)
+    
+    rows.each_with_index do |row, index|
+      store_property_values(row) if index == 0
+      guessed('product')
+    end
+    
   end
   
-  def guessed(type)
-    guesses = self.guesses || Hash.new
-    guesses[type] += 1
-
-    self.guesses = guesses.to_s
-    self.save
-  end
-
-  def added(type)
-    adds = self.adds || Hash.new
-    adds[type] = (adds[type] || 0) + 1
-
-    self.adds = adds.to_s
-    self.save
-  end
-
   def parse  
+    rows = parse_content(content)
     
-    if content.split("\n").first.include?(',')
-      csv_data = CSV.parse(content)
-    else # assuming tab delimited
-      csv_data = CSV.parse(content.gsub(/"/, "&quot;"), "\t")
-    end
-
-    headers = csv_data.shift.map {|i| i.to_s }
-    row_data = csv_data.map {|row| row.map {|cell| cell.to_s } }
-
-    # map the csv headers to the cells of each row
-    rows = row_data.map {|row| Hash[*headers.zip(row).flatten] }
-
     rows.each_with_index do |row, index|
       store_property_values(row) if index == 0
       add_product(row)
@@ -81,23 +68,23 @@ class OsCommerceImport < Import
     save_collects
   end
   
+  # save methods
   def save_products
     products.each do |product|
       if product.save
-        # self.added('product')
         RAILS_DEFAULT_LOGGER.debug "Saving product #{product.title}...."
+        added('product')
       end
     end
   end
     
   def save_images
-    debugger
     product_images.each do |image, product|
       image.prefix_options[:product_id] = product.id
 
       if OsCommerceImport.existent_url?(image.src.to_s) and image.save
         RAILS_DEFAULT_LOGGER.debug "Saving image....#{image.src}"
-        # self.added('image')
+        added('image')
       end
     end
   end
@@ -112,8 +99,8 @@ class OsCommerceImport < Import
       variant.prefix_options[:product_id] = product.id
   
       if variant.save
-        # self.added('variant')
         RAILS_DEFAULT_LOGGER.debug "Saving variant....#{variant.title}"      
+        added('variant')
       end
     end
   end
@@ -121,8 +108,8 @@ class OsCommerceImport < Import
   def save_collections
     collections.each do |collection|
       if collection.save
-        # self.added('collection')
         RAILS_DEFAULT_LOGGER.debug "Saving collection....#{collection.title}"      
+        added('collection')
       end
     end
   end
@@ -133,14 +120,15 @@ class OsCommerceImport < Import
       collect.collection_id = collect.collection_id.id
       
       if collect.save
-        # self.added('collect')
         RAILS_DEFAULT_LOGGER.debug "Saving collect....#{collect}"              
+        added('collect')
       end
     end
   end
 
   private  
-  
+
+  # begin memoizations
   def products
     @products ||= Array.new
   end  
@@ -157,9 +145,9 @@ class OsCommerceImport < Import
     @collects ||= Array.new
   end
   
-  def tags
-    @tags ||= Array.new
-  end
+  # def tags
+  #   @tags ||= Array.new
+  # end
   
   def variants
     @variants ||= Hash.new
@@ -168,7 +156,9 @@ class OsCommerceImport < Import
   def possible_property_values
     @property_values ||= Hash.new
   end
+  # end memoizations
 
+  # helper methods
   def add_product(row)
     get_product_attributes(row)
     products << product = ShopifyAPI::Product.new( :title => @title, :body => @description, :vendor => @vendor , :product_type => @product_type || 'Blank' )
@@ -198,16 +188,15 @@ class OsCommerceImport < Import
     @collection_name = if not row['v_categories_name_1'].blank? then row['v_categories_name_1'] else row['v_categories_name_1_1'] end
     
     # tags
-    2.upto(7) do |num|
-      tags << row["v_categories_name_#{num}_1"]
-    end
+    # 2.upto(7) do |num|
+    #   tags << row["v_categories_name_#{num}_1"]
+    # end
   end 
 
   def add_product_image(url, product)
-    image_path = URI.parse(url) rescue nil
-    return if image_path.nil?
+    return if url.nil?
     
-    product_images[ShopifyAPI::Image.new(:src => image_path)] = product  
+    product_images[ShopifyAPI::Image.new(:src => url)] = product  
   end
     
   def add_variants(row, product)
@@ -324,11 +313,24 @@ class OsCommerceImport < Import
   end
   
   def self.existent_url?(url)
-    return if url.blank?
     uri = URI.parse(url)
     http_conn = Net::HTTP.new(uri.host, uri.port)
     resp, data = http_conn.head(uri.path , nil)
     resp.code == "200"
+  end
+  
+  def parse_content(content)
+    if content.split("\n").first.include?(',')
+      csv_data = CSV.parse(content)
+    else # assuming tab delimited
+      csv_data = CSV.parse(content.gsub(/"/, "&quot;"), "\t")
+    end
+
+    headers = csv_data.shift.map {|i| i.to_s }
+    row_data = csv_data.map {|row| row.map {|cell| cell.to_s } }
+
+    # map the csv headers to the cells of each row
+    rows = row_data.map {|row| Hash[*headers.zip(row).flatten] }
   end
   
 end
