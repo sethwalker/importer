@@ -1,3 +1,5 @@
+require 'csv'
+
 class OsCommerceController < ApplicationController
 
   around_filter :shopify_session
@@ -14,7 +16,7 @@ class OsCommerceController < ApplicationController
       @import = OsCommerceImport.new(params[:import])
       @import.shop_url = current_shop.url
 
-      flash[:error] = "Error importing your shop. Wrong file type or corrupt file." unless @import.write_file
+      flash[:error] = "Error importing your shop. Wrong file type or corrupt file." if not @import.write_file
       if @import.save
         @import.guess
       else
@@ -22,9 +24,9 @@ class OsCommerceController < ApplicationController
         render :action => "new"
       end
     
-    rescue NameError => e
-      flash[:error] = "The type of import that you are attempting is not currently supported."
-      render :action => "new"
+    # rescue NameError => e
+    #   flash[:error] = "The type of import that you are attempting is not currently supported."
+    #   render :action => "new"
     rescue CSV::IllegalFormatError => e
       flash[:error] = "Error importing your shop. Your import file is not a valid CSV file."      
       render :action => "new"
@@ -32,33 +34,50 @@ class OsCommerceController < ApplicationController
   end
 
   def import
+    # this is an error-free zone!
+    flash[:error] = nil
+    
     begin
       # Find the import job 
       @import = OsCommerceImport.find(params[:id])
 
       raise ActiveRecord::RecordNotFound if @import.shop_url != current_shop.url
 
-      @import.send_later(:execute!, session[:shopify].site)
-    rescue REXML::ParseException => e
-      flash[:error] = "Error importing your shop. Your import file is not a valid CSV file."
-    rescue ActiveResource::ResourceNotFound => e
-      flash[:error] = "Error importing your shop. The data could not be saved."
-    rescue ActiveResource::ServerError => e
-      flash[:error] = "Error importing your shop. The data could not be saved."
-    rescue ActiveResource::ClientError => e
-      flash[:error] = "You have reached the maximum number of allowed products for your shop. Please upgrade your subscription to allow for more products."
+      @import.update_attribute :submitted_at, Time.now
+      debugger
+      @import.send_later(:execute!, session[:shopify].site, email_address)
     rescue ActiveRecord::RecordNotFound => e
       flash[:error] = "Either the import job that you are attempting to run does not exist or you are attempting to run someone else's import job..."
-    rescue NameError => e
-      flash[:error] = "The type of import that you are attempting may not be currently supported."
-    else
-      flash[:notice] = "Shop successfully imported! You have imported blah blah fill this in."
     end
     
     respond_to do |format|
       format.html { redirect_to :controller => 'dashboard', :action => 'index' }
       format.js { render :partial => 'import' }
     end
+  end
+  
+  def poll
+    @import = OsCommerceImport.find(params[:import_id])
+    if @import.finished?
+      respond_to do |format|
+        format.js { }
+      end
+    else
+      # do nothing
+    end
+  end
+  
+  private
+  
+  def email_address
+    http = Net::HTTP.new(ShopifyAPI::Product.superclass.site.host, ShopifyAPI::Product.superclass.site.port)
+    http.use_ssl = true
+    
+    req = Net::HTTP::Get.new("/admin/shop.xml")
+    req.basic_auth(ShopifyAPI::Product.superclass.site.user, ShopifyAPI::Product.superclass.site.password)
+    
+    response = http.request(req)
+    REXML::XPath.first(REXML::Document.new(response.body), "//email").text
   end
   
 end

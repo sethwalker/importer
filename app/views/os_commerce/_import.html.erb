@@ -1,10 +1,20 @@
+<!-- <script type="text/javascript" charset="utf-8">
+
+  function requestStatus() {
+    new Ajax.Request('/os_commerce/poll', {method:'get', evalScripts:true, parameters: 'import_id=<%= @import.id %>')
+  }
+  
+  var executer = new PeriodicalExecuter(requestStatus, 5);
+  
+</script> -->
+
 <div id="status" class="light">
   <h2 class="green">
     <span class="message">Import in Progress </span>
     <img src="/images/spinner.gif" />
   </h2>
-  <p class="message">
-    Your import job is currently in queue position blank of blank, we will send you an email once the job is finished.
+  <p class="note">
+    Your import job is currently being processed, we will send you an email once the job has finished.
   </p>
-  <p class="message">Your shop is currently being imported...</p>
+  <p class="note">Your shop is currently being imported...</p>
 </div>

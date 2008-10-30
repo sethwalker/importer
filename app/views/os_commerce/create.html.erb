@@ -3,6 +3,9 @@
 <div id="confirm" class="light">
 	<div id="guess">
 	  <p>This import job will add <%= pluralize(@import.guesses['product'], 'product') %> to <a href="http://<%= current_shop.url %>">your Shopify shop</a> from <a href="<%= @import.base_url%>">your osCommerce shop</a>.</p>		
+	  <p class="note">
+	    Just so you know, this process cannot be canceled or undone. <strong>Any changes to your shop will be permanent</strong>.
+    </p>
 	</div>
 
 	<br />
@@ -16,10 +19,10 @@
 
 <div class="box">
 	<div class="wrapper">
-		<p>
+		<p class="note">
 			The import may take a long time, depending on the size of your import file. If you are importing a shop with lots of products, then the uploading process may take a while.
 		</p>
-		<p>
+		<p class="note">
 			Please be patient :)
 		</p>
 	</div> 

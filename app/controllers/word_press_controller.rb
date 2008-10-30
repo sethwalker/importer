@@ -38,7 +38,7 @@ class WordPressController < ApplicationController
       
       raise ActiveRecord::RecordNotFound if @import.shop_url != current_shop.url
 
-      @import.send_later(:execute!, session[:shopify].site)
+      @import.execute!('test')
     rescue REXML::ParseException => e
       flash[:error] = "Error importing blog. Your file is not valid XML."
     rescue ActiveResource::ResourceNotFound => e

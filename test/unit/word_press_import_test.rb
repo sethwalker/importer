@@ -1,13 +1,16 @@
-require File.dirname(__FILE__) + '/../test_api_helper'
-require File.dirname(__FILE__) + '/../../vendor/plugins/shopify_app/lib/shopify_api.rb'
+# require File.dirname(__FILE__) + '/../test_api_helper'
+# require File.dirname(__FILE__) + '/../../vendor/plugins/shopify_app/lib/shopify_api.rb'
+require File.dirname(__FILE__) + '/../test_helper'
 
 class WordPressImportTest < ActiveSupport::TestCase
 
   def setup
-    @import = WordPressImport.new    
-    
-    @import.content = File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press/word_press_import.xml').read
-    @import.save    
+    # @import = WordPressImport.new    
+    # 
+    # @import.content = File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press/word_press_import.xml').read
+    # @import.shop_url = 'test'
+    # @import.save    
+    @import = imports(:word_press)
   end
   
   def test_save_data

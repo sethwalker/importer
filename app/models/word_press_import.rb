@@ -3,7 +3,7 @@ class WordPressImport < Import
   # Put it all together !
   def execute!(site)
     if self.start_time.blank? # guard against executing the job multiple times
-      ShopifyAPI::Product.superclass.site = site # this is for DJ, it can't seem to find the site at execution time unless
+      # ShopifyAPI::Product.superclass.site = site # this is for DJ, it can't seem to find the site at execution time unless
       
       self.type = 'WordPress'
       

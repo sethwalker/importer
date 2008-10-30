@@ -15,30 +15,64 @@ class Array
   end
 end
 
+class Mailer < ActionMailer::Base
+  def log(url, recipient, message)
+    from       ENV['from_address']
+    recipients recipient
+    subject    "[#{url}] Batch import completed"
+    body       "Importer successfully completed your import. \n\n#{message}"
+  end
+end
 
 class OsCommerceImport < Import
 
   # Put it all together !
-  def execute!(site)
+  def execute!(site, email_recipient)
+    ShopifyAPI::CustomCollection.find(:all).each { |c| c.destroy }
     if self.start_time.blank? # guard against executing the job multiple times
+    
+      # initialize
       ShopifyAPI::Product.superclass.site = site # this is for DJ, it can't seem to find the site at execution time unless
-      
+      RAILS_DEFAULT_LOGGER.debug "site is #{ShopifyAPI::Product.superclass.site}"
       self.type = 'OsCommerce'
-      
       self.start_time = Time.now
-      self.parse
-      self.save_data
+    
+      # parse data
+      begin
+        self.parse
+      rescue NameError => e
+       errors << "There was an error parsing your import file."
+      rescue CSV::IllegalFormatError => e
+        errors << "There was an error parsing your import file. Your import file is not a valid CSV file."      
+      end
+    
+      # save data
+      begin
+        self.save_data
+      rescue ActiveResource::ResourceNotFound => e
+        errors << "Error importing your shop. Some data could not be saved."
+      rescue ActiveResource::ServerError => e
+        errors << "Error importing your shop. Some data could not be saved."
+      rescue ActiveResource::ClientError => e
+        errors << "So far, you have imported #{adds['product']} products. This seems to be the maximum number of allowed products for your subscription plan. Please <a href='http://#{site}/admin/accounts/'>upgrade your subscription</a> to allow for more products."
+      end
+      
+      # wrap it up
       self.finish_time = Time.now
       self.save
+      
+      # email
+      message = ""
+      adds.each { |key,value| message += "#{value} #{key}s successfully imported.\n"}
+      message += "\n"
+      adds.keys.each { |key| message += "#{skipped(key)} #{key}s skipped.\n"}
+
+      Mailer.deliver_log(base_url, email_recipient, message)
     end
   end
 
-  # from import.rb
-  def source=(file_data)
-    @file_data = file_data #if file_data.original_filename.split(".").last == 'csv'
-  end
-
-  def skipped
+  def skipped(type)
+    guesses[type].to_i - adds[type].to_i
   end
 
   def guess
@@ -48,7 +82,6 @@ class OsCommerceImport < Import
       store_property_values(row) if index == 0
       guessed('product')
     end
-    
   end
   
   def parse  
@@ -194,7 +227,7 @@ class OsCommerceImport < Import
   end 
 
   def add_product_image(url, product)
-    return if url.nil?
+    return if url.blank?
     
     product_images[ShopifyAPI::Image.new(:src => url)] = product  
   end
@@ -275,14 +308,6 @@ class OsCommerceImport < Import
   
   def create_variant(title, price, grams, sku, product)
     variants[ShopifyAPI::Variant.new( :title => title, :price => price, :grams => grams, :sku => sku )] = product
-  end
-  
-  def map_variants_for(product)
-    variants.each do |variant, current_product|
-      if product == current_product
-        
-      end
-    end
   end
   
   def number_of_variants_for(product)

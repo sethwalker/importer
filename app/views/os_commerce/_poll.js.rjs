@@ -1,0 +1,8 @@
+page.replace_html 'status', '<div id="status" class="light">
+  <h2 class="green">
+    <span class="message">Import Completed</span>
+  </h2>
+  <p class="note">
+    <%= @import.errors %>
+  </p>
+</div>'
