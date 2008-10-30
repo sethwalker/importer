@@ -1,6 +1,5 @@
 require File.dirname(__FILE__) + '/../test_api_helper'
-require File.dirname(__FILE__) + '/../../vendor/plugins/shopify_app/lib/shopify_api.rb'
-require 'fastercsv'
+# require File.dirname(__FILE__) + '/../../vendor/plugins/shopify_app/lib/shopify_api.rb'
 
 class OsCommerceImportTest < ActiveSupport::TestCase
 
@@ -11,14 +10,21 @@ class OsCommerceImportTest < ActiveSupport::TestCase
     @import.base_url = 'localhost/os-commerce'
     @import.shop_url = 'localhost'
     @import.save    
+    
+    OsCommerceImport.stubs(:existent_url?).returns(true)
   end
 
   def test_save_data
-    ShopifyAPI::Product.any_instance.expects(:save).times(27)
-    ShopifyAPI::Image.any_instance.expects(:save).times(27)
-    ShopifyAPI::Variant.any_instance.expects(:save).times(27)
+    ShopifyAPI::Product.any_instance.expects(:save).times(27).returns(true)
+    ShopifyAPI::Product.stubs(:find).returns(nil)
+    ShopifyAPI::Image.any_instance.expects(:save).times(27).returns(true)
+    ShopifyAPI::Variant.any_instance.expects(:save).times(37).returns(true)
+    ShopifyAPI::CustomCollection.any_instance.expects(:save).times(3).returns(true)
+    ShopifyAPI::Collect.any_instance.expects(:save).times(27).returns(true)
     
-    assert @import.execute!('localhost')    
+    assert @import.parse
+    assert @import.save_data
+    assert @import.save
   end
 
   def test_parse
@@ -28,9 +34,6 @@ class OsCommerceImportTest < ActiveSupport::TestCase
     assert @import.save
   end
   
-  def test_parsing
-    assert @import.parse    
-  end
 # 
 #   def test_skipped
 #     # mocks

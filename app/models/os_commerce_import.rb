@@ -124,7 +124,7 @@ class OsCommerceImport < Import
 
   def save_variants
     variants.each do |variant, product|
-      if default = ShopifyAPI::Product.find(product.id).attributes['variants'].find { |v| v.title == 'Default' }
+      if ShopifyAPI::Product.find(product.id) and default = ShopifyAPI::Product.find(product.id).attributes['variants'].find { |v| v.title == 'Default' }
         default.attributes.update(variant.attributes)
         variant = default
       end
@@ -336,14 +336,7 @@ class OsCommerceImport < Import
       possible_property_values[property_name] = row.keys.join(" ").scan(/v_attribute_values_name_#{property_name_number}_._1/)
     end            
   end
-  
-  def self.existent_url?(url)
-    uri = URI.parse(url)
-    http_conn = Net::HTTP.new(uri.host, uri.port)
-    resp, data = http_conn.head(uri.path , nil)
-    resp.code == "200"
-  end
-  
+    
   def parse_content(content)
     if content.split("\n").first.include?(',')
       csv_data = CSV.parse(content)
@@ -356,6 +349,16 @@ class OsCommerceImport < Import
 
     # map the csv headers to the cells of each row
     rows = row_data.map {|row| Hash[*headers.zip(row).flatten] }
+  end
+  
+  
+  
+  
+  def self.existent_url?(url)
+    uri = URI.parse(url)
+    http_conn = Net::HTTP.new(uri.host, uri.port)
+    resp, data = http_conn.head(uri.path , nil)
+    resp.code == "200"
   end
   
 end

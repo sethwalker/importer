@@ -28,9 +28,8 @@ class WordPressImport < Import
     @original_url ||= REXML::XPath.match(xml, 'rss/channel/link').first.text
   end
   
-  def skipped
-    #(self.posts_guess + self.pages_guess + self.comments_guess) - (self.posts + self.pages + self.comments)
-    0
+  def skipped(type)
+    guesses[type].to_i - adds[type].to_i
   end
   
   def guess
@@ -43,7 +42,7 @@ class WordPressImport < Import
       when 'page'
         self.guessed('page')
       when 'post'
-        self.guessed('post') if status == 'publish' || status == 'draft'
+        self.guessed('article') if status == 'publish' || status == 'draft'
         comments.each { |c| self.guessed('comment') }
       end      
     end
@@ -83,7 +82,7 @@ class WordPressImport < Import
       
       a.published_at = current_saved_date
       if a.save
-        added('post')
+        added('article')
       end
     end
 
