@@ -45,6 +45,18 @@ class Import < ActiveRecord::Base
   def finished?
     !finish_time.blank?
   end
+  
+  def skipped(type)
+    guesses[type].to_i - adds[type].to_i
+  end
+  
+  def mail_message
+    message = ""
+    adds.each { |key,value| message += "#{value} #{key}s successfully imported.\n"}
+    message += "\n"
+    guesses.keys.each { |key| message += "#{skipped(key)} #{key}s skipped.\n"}
+    message
+  end
         
   # Children of this class should overwrite these methods
   def parse 
@@ -55,14 +67,5 @@ class Import < ActiveRecord::Base
   
   def guess 
   end
-  
-  def skipped 
-  end
     
-  def blog_title
-  end
-  
-  def original_url
-  end
-
 end

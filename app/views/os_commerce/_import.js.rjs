@@ -1,3 +1,2 @@
-page.insert_html :before, 'confirm', :partial => 'import'
-page.remove 'confirm'
+page.replace 'confirm', :partial => 'import'
 flash.discard

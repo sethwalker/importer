@@ -5,8 +5,6 @@ class WordPressImport < Import
     if self.start_time.blank? # guard against executing the job multiple times
       # ShopifyAPI::Product.superclass.site = site # this is for DJ, it can't seem to find the site at execution time unless
       
-      self.type = 'WordPress'
-      
       self.start_time = Time.now
       self.parse
       self.save_data

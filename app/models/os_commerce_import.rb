@@ -28,33 +28,32 @@ class OsCommerceImport < Import
 
   # Put it all together !
   def execute!(site, email_recipient)
-    ShopifyAPI::CustomCollection.find(:all).each { |c| c.destroy }
     if self.start_time.blank? # guard against executing the job multiple times
     
       # initialize
       ShopifyAPI::Product.superclass.site = site # this is for DJ, it can't seem to find the site at execution time unless
-      RAILS_DEFAULT_LOGGER.debug "site is #{ShopifyAPI::Product.superclass.site}"
-      self.type = 'OsCommerce'
       self.start_time = Time.now
     
+      ShopifyAPI::CustomCollection.find(:all).each { |c| c.destroy }
+      ShopifyAPI::Product.find(:all).each { |p| p.destroy }
       # parse data
       begin
-        self.parse
+        parse
       rescue NameError => e
-       errors << "There was an error parsing your import file."
+       import_errors << "There was an error parsing your import file."
       rescue CSV::IllegalFormatError => e
-        errors << "There was an error parsing your import file. Your import file is not a valid CSV file."      
+        import_errors << "There was an error parsing your import file. Your import file is not a valid CSV file."      
       end
     
       # save data
       begin
-        self.save_data
+        save_data
       rescue ActiveResource::ResourceNotFound => e
-        errors << "Error importing your shop. Some data could not be saved."
+        import_errors << "Error importing your shop. Some data could not be saved."
       rescue ActiveResource::ServerError => e
-        errors << "Error importing your shop. Some data could not be saved."
+        import_errors << "Error importing your shop. Some data could not be saved."
       rescue ActiveResource::ClientError => e
-        errors << "So far, you have imported #{adds['product']} products. This seems to be the maximum number of allowed products for your subscription plan. Please <a href='http://#{site}/admin/accounts/'>upgrade your subscription</a> to allow for more products."
+        import_errors << "So far, you have imported #{adds['product']} products. This seems to be the maximum number of allowed products for your subscription plan. Please <a href='http://#{site}/admin/accounts/'>upgrade your subscription</a> to allow for more products."
       end
       
       # wrap it up
@@ -62,17 +61,8 @@ class OsCommerceImport < Import
       self.save
       
       # email
-      message = ""
-      adds.each { |key,value| message += "#{value} #{key}s successfully imported.\n"}
-      message += "\n"
-      adds.keys.each { |key| message += "#{skipped(key)} #{key}s skipped.\n"}
-
-      Mailer.deliver_log(base_url, email_recipient, message)
+      Mailer.deliver_log(base_url, email_recipient, mail_message)
     end
-  end
-
-  def skipped(type)
-    guesses[type].to_i - adds[type].to_i
   end
 
   def guess
@@ -94,6 +84,12 @@ class OsCommerceImport < Import
   end
 
   def save_data
+    RAILS_DEFAULT_LOGGER.debug "images has #{product_images.keys.size}"
+    RAILS_DEFAULT_LOGGER.debug "variants has #{variants.keys.size}"
+    RAILS_DEFAULT_LOGGER.debug "collects has #{collects.size}"
+    
+    debugger
+
     save_products
     save_images
     save_variants
@@ -115,7 +111,7 @@ class OsCommerceImport < Import
     product_images.each do |image, product|
       image.prefix_options[:product_id] = product.id
 
-      if OsCommerceImport.existent_url?(image.src.to_s) and image.save
+      if OsCommerceImport.existent_url?(image.src.to_s) && image.save
         RAILS_DEFAULT_LOGGER.debug "Saving image....#{image.src}"
         added('image')
       end
@@ -124,7 +120,7 @@ class OsCommerceImport < Import
 
   def save_variants
     variants.each do |variant, product|
-      if ShopifyAPI::Product.find(product.id) and default = ShopifyAPI::Product.find(product.id).attributes['variants'].find { |v| v.title == 'Default' }
+      if default = ShopifyAPI::Product.find(product.id).attributes['variants'].find { |v| v.title == 'Default' }
         default.attributes.update(variant.attributes)
         variant = default
       end
@@ -211,7 +207,7 @@ class OsCommerceImport < Import
     # image
     @image_url = "#{base_url}/images/#{row['v_products_image']}"
     if not OsCommerceImport.existent_url?(@image_url)
-      @image_url = "#{base_url}/catalog/images/#{row['v_products_image']}" #try this...
+      @image_url = "#{base_url}/images/#{row['v_products_image_med']}" #try this...
       if not OsCommerceImport.existent_url?(@image_url)
         @image_url = ""
       end
@@ -355,7 +351,12 @@ class OsCommerceImport < Import
   
   
   def self.existent_url?(url)
-    uri = URI.parse(url)
+    begin
+      uri = URI.parse(url)
+    rescue URI::InvalidURIError => e
+      RAILS_DEFAULT_LOGGER.debug "Invalid URI: #{uri}"
+      return false
+    end
     http_conn = Net::HTTP.new(uri.host, uri.port)
     resp, data = http_conn.head(uri.path , nil)
     resp.code == "200"

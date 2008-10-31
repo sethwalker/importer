@@ -1,0 +1,9 @@
+<script type="text/javascript" charset="utf-8">
+
+  function requestStatus() {
+    new Ajax.Request('/os_commerce/poll', {method:'get', evalScripts:true, parameters: 'import_id=<%= @import.id %>&format=js' })
+  }
+
+  var executer = new PeriodicalExecuter(requestStatus, 15);
+
+</script>

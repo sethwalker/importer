@@ -1,20 +1,24 @@
-<!-- <script type="text/javascript" charset="utf-8">
-
-  function requestStatus() {
-    new Ajax.Request('/os_commerce/poll', {method:'get', evalScripts:true, parameters: 'import_id=<%= @import.id %>')
-  }
-  
-  var executer = new PeriodicalExecuter(requestStatus, 5);
-  
-</script> -->
-
-<div id="status" class="light">
-  <h2 class="green">
-    <span class="message">Import in Progress </span>
-    <img src="/images/spinner.gif" />
-  </h2>
-  <p class="note">
-    Your import job is currently being processed, we will send you an email once the job has finished.
-  </p>
-  <p class="note">Your shop is currently being imported...</p>
+<div id="confirm" class="light">
+  <% if @import && !@import.finished? %>  
+    <h2 class="green">
+      <span class="message">Import in Progress </span>
+      <img src="/images/spinner.gif" />
+    </h2>
+    <p class="note">
+      Your import job was submitted at <%= @import.submitted_at.to_s(:long) %> and is currently being processed, we will send you an email once the job has finished.
+    </p>
+    <p class="note">Your shop is currently being imported...</p>
+  <% elsif @import && @import.finished? %>
+    <h2 class="green">
+      <span class="message">Import Completed </span>
+    </h2>
+    <p class="note">
+      Job summary: <br /> 
+      <%= @import.mail_message.to_s %> <br /><br />
+    </p>
+  <% else %>
+  <h2 class="red">
+    <span class="message">Can't find your import job!! </span>
+  </h2>    
+  <% end %>
 </div>
