@@ -33,9 +33,7 @@ class OsCommerceImport < Import
       # initialize
       ShopifyAPI::Product.superclass.site = site # this is for DJ, it can't seem to find the site at execution time unless
       self.start_time = Time.now
-    
-      ShopifyAPI::CustomCollection.find(:all).each { |c| c.destroy }
-      ShopifyAPI::Product.find(:all).each { |p| p.destroy }
+      
       # parse data
       begin
         parse
@@ -84,76 +82,79 @@ class OsCommerceImport < Import
   end
 
   def save_data
-    RAILS_DEFAULT_LOGGER.debug "images has #{product_images.keys.size}"
-    RAILS_DEFAULT_LOGGER.debug "variants has #{variants.keys.size}"
-    RAILS_DEFAULT_LOGGER.debug "collects has #{collects.size}"
     
-    debugger
-
-    save_products
-    save_images
-    save_variants
-    save_collections
-    save_collects
-  end
-  
-  # save methods
-  def save_products
+    # save product
     products.each do |product|
       if product.save
         RAILS_DEFAULT_LOGGER.debug "Saving product #{product.title}...."
         added('product')
       end
-    end
-  end
-    
-  def save_images
-    product_images.each do |image, product|
-      image.prefix_options[:product_id] = product.id
-
-      if OsCommerceImport.existent_url?(image.src.to_s) && image.save
-        RAILS_DEFAULT_LOGGER.debug "Saving image....#{image.src}"
-        added('image')
-      end
-    end
-  end
-
-  def save_variants
-    variants.each do |variant, product|
-      if default = ShopifyAPI::Product.find(product.id).attributes['variants'].find { |v| v.title == 'Default' }
-        default.attributes.update(variant.attributes)
-        variant = default
-      end
       
-      variant.prefix_options[:product_id] = product.id
-  
-      if variant.save
-        RAILS_DEFAULT_LOGGER.debug "Saving variant....#{variant.title}"      
-        added('variant')
-      end
-    end
-  end
+      # save it's image
+      product_images.select{|key,value| value.id == product.id}.each do |image, image_product|
+        image.prefix_options[:product_id] = image_product.id
     
-  def save_collections
-    collections.each do |collection|
-      if collection.save
-        RAILS_DEFAULT_LOGGER.debug "Saving collection....#{collection.title}"      
-        added('collection')
+        if OsCommerceImport.existent_url?(image.src.to_s) && image.save
+          RAILS_DEFAULT_LOGGER.debug "Saving image....#{image.src} for #{product.title}"
+        end
       end
-    end
-  end
-  
-  def save_collects
-    collects.each do |collect|
-      collect.product_id = collect.product_id.id
-      collect.collection_id = collect.collection_id.id
+    
+      # save it's variant
+      variants.select{|key, value| value.id == product.id}.each do |variant, variant_product|
+        if default = ShopifyAPI::Product.find(variant_product.id).attributes['variants'].find { |v| v.title == 'Default' }
+          default.attributes.update(variant.attributes)
+          variant = default
+        end
+    
+        variant.prefix_options[:product_id] = variant_product.id
+    
+        if variant.save
+          RAILS_DEFAULT_LOGGER.debug "Saving variant....#{variant.title} for #{product.title}"      
+        end
+      end
+    
+      # save it's collect
+      collects.select{|c| c.product_id.id == product.id}.each do |collect|
+        collect.collection_id.save if collect.collection_id.id == nil
       
-      if collect.save
-        RAILS_DEFAULT_LOGGER.debug "Saving collect....#{collect}"              
-        added('collect')
+        collect.product_id = collect.product_id.id
+        collect.collection_id = collect.collection_id.id
+    
+        if collect.save
+          RAILS_DEFAULT_LOGGER.debug "Saving collect....#{collect} for #{product.title}"          
+        end
       end
+      RAILS_DEFAULT_LOGGER.debug "================"
+      
+      ####
+      # UPDATE THE QUANTITIES FOR THE VARIANTS
+      #####
+      # all_products = ShopifyAPI::Product.find(:all, :params => {:limit => 1000})
+      # products.each do |outer_product|
+      #   RAILS_DEFAULT_LOGGER.debug "Currently doing product #{outer_product.title}"
+      #   product = all_products.find {|p| p.title == outer_product.title}      
+      #   variants.select{|key, value| value.title == product.title}.each do |variant, variant_product|
+      #     default = ShopifyAPI::Product.find(product.id).attributes['variants'].find { |v| v.title == 'Default' }
+      #     default.inventory_management = 'shopify'
+      #     default.inventory_quantity = variant.inventory_quantity
+      #     
+      #     # default.prefix_options[:product_id] = variant_product.id
+      # 
+      #     if default.save
+      #       RAILS_DEFAULT_LOGGER.debug "Saving variant....#{variant.title} for #{product.title}"      
+      #     end
+      #   end
+      #     
+      #   
+      # end
+    
     end
-  end
+    
+    rescue Exception => e
+      RAILS_DEFAULT_LOGGER.debug "Exception: #{e.message}"
+      RAILS_DEFAULT_LOGGER.debug "Backtrace: #{e.backtrace}"
+      
+  end    
 
   private  
 
@@ -298,12 +299,13 @@ class OsCommerceImport < Import
     @price = row['v_products_price']
     @weight = row['v_products_weight']
     @sku = row['v_products_model']
+    @quant = row['v_products_quantity']
     
-    create_variant(@title, @price, @weight, @sku, product)
+    create_variant(@title, @price, @weight, @sku, @quant, product)
   end
   
-  def create_variant(title, price, grams, sku, product)
-    variants[ShopifyAPI::Variant.new( :title => title, :price => price, :grams => grams, :sku => sku )] = product
+  def create_variant(title, price, grams, sku, quant, product)
+    variants[ShopifyAPI::Variant.new( :title => title, :price => price, :grams => grams, :sku => sku, :inventory_quantity => quant )] = product
   end
   
   def number_of_variants_for(product)
@@ -357,8 +359,15 @@ class OsCommerceImport < Import
       RAILS_DEFAULT_LOGGER.debug "Invalid URI: #{uri}"
       return false
     end
-    http_conn = Net::HTTP.new(uri.host, uri.port)
-    resp, data = http_conn.head(uri.path , nil)
+
+    begin
+      http_conn = Net::HTTP.new(uri.host, uri.port)
+      resp, data = http_conn.head(uri.path , nil)
+    rescue Exception => e
+      RAILS_DEFAULT_LOGGER.debug "Invalid URI: #{uri}"
+      return false
+    end
+
     resp.code == "200"
   end
   

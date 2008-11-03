@@ -17,6 +17,7 @@ class OsCommerceController < ApplicationController
       @import.shop_url = current_shop.url
 
       flash[:error] = "Error importing your shop. Wrong file type or corrupt file." if not @import.write_file
+      
       if @import.save
         @import.guess
       else
@@ -24,9 +25,6 @@ class OsCommerceController < ApplicationController
         render :action => "new"
       end
     
-    # rescue NameError => e
-    #   flash[:error] = "The type of import that you are attempting is not currently supported."
-    #   render :action => "new"
     rescue CSV::IllegalFormatError => e
       flash[:error] = "Error importing your shop. Your import file is not a valid CSV file."      
       render :action => "new"
@@ -44,7 +42,7 @@ class OsCommerceController < ApplicationController
       raise ActiveRecord::RecordNotFound if @import.shop_url != current_shop.url
 
       @import.update_attribute :submitted_at, Time.now
-      @import.execute!(session[:shopify].site, email_address)
+      @import.send_later(:execute!, session[:shopify].site, email_address)
     rescue ActiveRecord::RecordNotFound => e
       flash[:error] = "Either the import job that you are attempting to run does not exist or you are attempting to run someone else's import job..."
     end

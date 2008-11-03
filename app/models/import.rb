@@ -1,14 +1,14 @@
 class Import < ActiveRecord::Base
 
-  attr_protected :shop_url
+  # attr_protected :shop_url
   validates_presence_of  :content, :on => :create      # must have content just on creation of import
   validates_presence_of  :shop_url
   
   before_create :init_serials
   
-  serialize :adds
-  serialize :guesses
-  serialize :import_errors
+  serialize :adds, Hash
+  serialize :guesses, Hash
+  serialize :import_errors, Array
 
   def init_serials
     self.adds = Hash.new
@@ -32,14 +32,19 @@ class Import < ActiveRecord::Base
     end
   end
   
-  def guessed(type)
-    if not self.guesses[type] then self.guesses[type] = 1 else self.guesses[type] += 1 end
-    self.save
-  end
 
   def added(type)
-    if not self.adds[type] then self.adds[type] = 1 else self.adds[type] += 1 end
-    self.save
+    adds ||= {}
+    adds[type] ||= 0
+    adds[type] += 1
+    save
+  end
+  
+  def guessed(type)   
+    guesses ||= {}
+    guesses[type] ||= 0
+    guesses[type] += 1
+    save
   end
   
   def finished?
