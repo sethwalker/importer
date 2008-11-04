@@ -8,42 +8,6 @@ class WordPressImportTest < ActiveSupport::TestCase
     assert @import.save    
   end
   
-  def test_save_data
-    ShopifyAPI::Article.any_instance.expects(:save).times(8)
-    ShopifyAPI::Blog.any_instance.expects(:save).times(1)
-    ShopifyAPI::Page.any_instance.expects(:save).times(2)
-    ShopifyAPI::Comment.any_instance.expects(:save).times(3)
-
-    @import.parse    
-    @import.save_data
-  end
-  
-  def test_parse
-    WordPressImport.any_instance.expects(:add_page).times(1)
-    WordPressImport.any_instance.expects(:add_article).times(4)
-
-    @import.parse
-  end
-  
-  def test_skipped
-    ShopifyAPI::Article.any_instance.expects(:save).times(8).returns(true)
-    ShopifyAPI::Blog.any_instance.expects(:save).times(1).returns(true)
-    ShopifyAPI::Page.any_instance.expects(:save).times(2).returns(true)
-    ShopifyAPI::Comment.any_instance.expects(:save).times(3).returns(true)
-    
-    @import.guess    
-    @import.parse
-    @import.save_data
-    
-    assert_equal 4, @import.adds['article']
-    assert_equal 1, @import.adds['page']
-    assert_equal 3, @import.adds['comment']
-
-    assert_equal 0, @import.skipped('article')
-    assert_equal 0, @import.skipped('page')
-    assert_equal 0, @import.skipped('comment')    
-  end
-  
   def test_blog_title
     assert_equal "Jesse's WordPress Blog", @import.blog_title
   end
