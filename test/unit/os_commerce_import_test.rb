@@ -1,6 +1,3 @@
-require File.dirname(__FILE__) + '/../test_api_helper'
-# require File.dirname(__FILE__) + '/../../vendor/plugins/shopify_app/lib/shopify_api.rb'
-
 class OsCommerceImportTest < ActiveSupport::TestCase
 
   def setup
@@ -17,7 +14,8 @@ class OsCommerceImportTest < ActiveSupport::TestCase
   def test_save_data
     ShopifyAPI::Product.any_instance.expects(:save).times(27).returns(true)
     ShopifyAPI::Product.stubs(:find).returns(nil)
-    ShopifyAPI::Image.any_instance.expects(:save).times(27).returns(true)
+    
+    ShopifyAPI::Image.stubs.expects(:save).times(27).returns(true)
     ShopifyAPI::Variant.any_instance.expects(:save).times(37).returns(true)
     ShopifyAPI::CustomCollection.any_instance.expects(:save).times(3).returns(true)
     ShopifyAPI::Collect.any_instance.expects(:save).times(27).returns(true)
@@ -32,6 +30,12 @@ class OsCommerceImportTest < ActiveSupport::TestCase
     
     assert @import.parse
     assert @import.save
+  end
+  
+  def test_guess
+    @import.guess
+
+    assert_equal 27, @import.guesses['product']
   end
   
 # 

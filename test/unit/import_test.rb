@@ -23,19 +23,27 @@ class ImportTest < ActiveSupport::TestCase
   end
   
   def test_should_be_able_to_add_and_guess
-    @import.adds['post'] = @import.adds['page'] = @import.guesses['post'] = @import.guesses['page'] = 0
-    assert_difference "@import.adds['post']", +1 do
-      @import.added('post')
-    end    
-    assert_difference "@import.adds['page']", +1 do
-      @import.added('page')
+    RAILS_DEFAULT_LOGGER.debug "=======my method"
+    hashes = [@import.adds, @import.guesses]
+    
+    hashes.each do |hash|
+      assert_equal nil, hash
     end
-    assert_difference "@import.guesses['post']", +1 do
-      @import.guessed('post')
-    end    
-    assert_difference "@import.guesses['page']", +1 do
-      @import.guessed('page')
+    
+    @import.added('post')
+    @import.added('page')
+    @import.save
+
+    @import.guessed('post')
+    @import.guessed('page')
+    @import.content = 't'
+    @import.save
+
+    [@import.reload.adds, @import.guesses].each do |hash|
+      assert_equal 1, hash['post']
+      assert_equal 1, hash['page']
     end
+    
     assert @import.save
   end
     
@@ -61,24 +69,7 @@ class ImportTest < ActiveSupport::TestCase
     @import.finish_time = finish
     assert_equal finish, @import.finish_time
   end
-  
-  def test_creation_should_init_guesses_errors_and_adds
-    @import = WordPressImport.new(:content => 'test')
-    @import.shop_url = 'test'
-
-    [@import.adds, @import.guesses, @import.import_errors].each do |attrib|
-      assert_equal nil, attrib
-    end
     
-    assert @import.save
-    
-    [@import.adds, @import.guesses].each do |hash|
-      assert_equal({}, hash)
-    end
-    
-    assert_equal [], @import.import_errors
-  end
-  
   def test_shop_url_should_be_protected
     @import = WordPressImport.new(:shop_url => 'test', :content => 'test')
     assert !@import.save

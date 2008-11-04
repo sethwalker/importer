@@ -1,5 +1,3 @@
-require File.dirname(__FILE__) + '/../test_api_helper'
-require File.dirname(__FILE__) + '/../../vendor/plugins/shopify_app/lib/shopify_api.rb'
 
 class WordPressControllerTest < ActionController::TestCase
   
@@ -49,25 +47,16 @@ class WordPressControllerTest < ActionController::TestCase
      WordPressImport.any_instance.expects(:guess).times(1)
      
      assert_difference "WordPressImport.count", +1 do
-       post :create, :import => { :source => fixture_file_upload('../fixtures/files/word_press_import.xml', 'text/xml') }
+       post :create, :import => { :source => fixture_file_upload('../fixtures/files/word_press/word_press_import.xml', 'text/xml') }
      end
      
-     assert_equal(File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press_import.xml').read, WordPressImport.find(:last).content)
+     assert_equal(File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press/word_press_import.xml').read, WordPressImport.find(:last).content)
      assert_equal session[:shopify].url, WordPressImport.find(:last).site
    end
 
-   def test_create_should_not_succeed_with_invalid_file_type
-     assert_no_difference "WordPressImport.count" do
-         post :create, :import => { :source => fixture_file_upload('../fixtures/files/postsxml.zip', 'text/xml') }
-     end
-
-     assert flash[:error]
-     assert_template 'new'
-   end
-   
    def test_create_should_raise_exception_if_invalid_xml
      assert_difference "WordPressImport.count", +1 do
-       post :create, :import => { :source => fixture_file_upload('../fixtures/files/word_press_import_typo.xml', 'text/xml') }
+       post :create, :import => { :source => fixture_file_upload('../fixtures/files/word_press/word_press_import_typo.xml', 'text/xml') }
      end
      
       assert flash[:error]
@@ -77,13 +66,12 @@ class WordPressControllerTest < ActionController::TestCase
     def test_import_should_succeed_over_html
       post :import, :format => 'html', :id => @import.id
     
-      assert flash[:notice]
       assert_response :redirect
       assert_redirected_to :controller => 'dashboard', :action => 'index'
     end
   
     def test_import_failing_with_invalid_xml_over_html
-      @import.content = File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press_import_typo.xml').read
+      @import.content = File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press/word_press_import_typo.xml').read
       @import.save
       post :import, :id => @import.id, :format => 'html'
 
@@ -125,7 +113,7 @@ class WordPressControllerTest < ActionController::TestCase
     end
   
     def test_import_failing_with_invalid_xml_over_js
-      @import.content = File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press_import_typo.xml').read
+      @import.content = File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press/word_press_import_typo.xml').read
       @import.save
     
       post :import, :id => @import.id, :format => 'js'

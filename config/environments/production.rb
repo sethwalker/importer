@@ -23,5 +23,5 @@ config.action_view.cache_template_loading            = true
 config.action_mailer.delivery_method        = :sendmail
 
 config.after_initialize do
-  ENV['from_address']                 = 'Shopify <importer@shopifyapps.com>'
+  ENV['from_address']                 = "Shopify's Importer <importer@shopifyapps.com>"
 end

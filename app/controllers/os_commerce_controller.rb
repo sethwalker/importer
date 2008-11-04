@@ -21,7 +21,7 @@ class OsCommerceController < ApplicationController
       if @import.save
         @import.guess
       else
-        flash[:error] = "Error importing your shop." unless flash[:error]
+        flash[:error] = "Error importing your shop. #{@import.errors.to_a.first.join(" ").gsub(/base_url/, "URL")}" unless flash[:error]
         render :action => "new"
       end
     
@@ -42,7 +42,7 @@ class OsCommerceController < ApplicationController
       raise ActiveRecord::RecordNotFound if @import.shop_url != current_shop.url
 
       @import.update_attribute :submitted_at, Time.now
-      @import.send_later(:execute!, session[:shopify].site, email_address)
+      @import.send_later(:execute!, session[:shopify].site, Import.email_address)
     rescue ActiveRecord::RecordNotFound => e
       flash[:error] = "Either the import job that you are attempting to run does not exist or you are attempting to run someone else's import job..."
     end
@@ -59,19 +59,6 @@ class OsCommerceController < ApplicationController
     respond_to do |format|
       format.js { render :partial => 'import' }
     end
-  end
-  
-  private
-  
-  def email_address
-    http = Net::HTTP.new(ShopifyAPI::Product.superclass.site.host, ShopifyAPI::Product.superclass.site.port)
-    http.use_ssl = true
-    
-    req = Net::HTTP::Get.new("/admin/shop.xml")
-    req.basic_auth(ShopifyAPI::Product.superclass.site.user, ShopifyAPI::Product.superclass.site.password)
-    
-    response = http.request(req)
-    REXML::XPath.first(REXML::Document.new(response.body), "//email").text
   end
   
 end

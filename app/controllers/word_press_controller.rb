@@ -21,10 +21,10 @@ class WordPressController < ApplicationController
         flash[:error] = "Error importing your blog." unless flash[:error]
         render :action => "new"
       end
-    
-    rescue NameError => e
-      flash[:error] = "The type of import that you are attempting is not currently supported."
-      render :action => "new"
+
+    # rescue NameError => e
+    #   flash[:error] = "There was an error parsing your input file."
+    #   render :action => "new"
     rescue REXML::ParseException => e
       flash[:error] = "Error importing blog. Your file is not valid XML."      
       render :action => "new"
@@ -38,22 +38,23 @@ class WordPressController < ApplicationController
       
       raise ActiveRecord::RecordNotFound if @import.shop_url != current_shop.url
 
-      @import.execute!('test')
-    rescue REXML::ParseException => e
-      flash[:error] = "Error importing blog. Your file is not valid XML."
-    rescue ActiveResource::ResourceNotFound => e
-      flash[:error] = "Error importing blog. The data could not be saved."
+      @import.update_attribute :submitted_at, Time.now
+      @import.execute!(session[:shopify].site, Import.email_address)
     rescue ActiveRecord::RecordNotFound => e
       flash[:error] = "Either the import job that you are attempting to run does not exist or you are attempting to run someone else's import job..."
-    rescue NameError => e
-      flash[:error] = "The type of import that you are attempting may not be currently supported."
-    else
-      flash[:notice] = "Blog successfully imported! You have imported " + help.pluralize(@import.adds.to_hash['post'], 'blog post') + ", " + help.pluralize(@import.adds.to_hash['page'], 'page') + ", and " + help.pluralize(@import.adds.to_hash['comment'], 'comment') + ", with #{@import.skipped} skipped."      
     end
     
     respond_to do |format|
       format.html { redirect_to :controller => 'dashboard', :action => 'index' }
-      format.js { render :partial => 'import' }
+      format.js { render :partial => '/os_commerce/import' }
+    end
+  end
+  
+  def poll
+    @import = WordPressImport.find(params[:import_id])
+
+    respond_to do |format|
+      format.js { render :partial => 'os_commerce/import' }
     end
   end
   

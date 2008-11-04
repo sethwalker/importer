@@ -9,24 +9,24 @@
 
 <div id="confirm" class="light">
 	<div id="guess">
-		<p>This import job will add <%= pluralize(@import.guesses['post'], 'blog post') %>,  <%= pluralize(@import.guesses['comment'], 'comment') %>, and <%= 		pluralize(@import.guesses['page'], 'page') %> from <a href="<%= @import.original_url %>"><%= @import.blog_title %></a> to a new Shopify blog in your shop.</p>
+		<p>This import job will add <%= pluralize(@import.guesses['article'], 'blog post') %>,  <%= pluralize(@import.guesses['comment'], 'comment') %>, and <%= 		pluralize(@import.guesses['page'], 'page') %> from <a href="<%= @import.original_url %>"><%= @import.blog_title %></a> to a new Shopify blog in your shop.</p>
 	</div>
 
 	<br />
 	<div id="buttons">
-		<% form_remote_tag :url => '/word_press/import', :loading => 'status()' do %>
+		<% form_remote_tag :url => '/word_press/import' do %>
 			<input type="hidden" name="id" value="<%= @import.id%>" />
-			<%= submit_tag 'Start Import' %> or <%= link_to 'Cancel', '/' %></p>
+			<%= submit_tag 'Start Import', :disable_with => "Starting..." %> or <%= link_to 'Cancel', '/' %></p>
 		<% end %>
 	</div>
 </div>
 
 <div class="box">
 	<div class="wrapper">
-		<p>
+		<p class="note">
 			The import may take a long time, depending on the size of your import file. If you are importing a blog with a lot of history (lots of articles and comments), then the uploading process may take a while.
 		</p>
-		<p>
+		<p class="note">
 			Please be patient :)
 		</p>
 	</div> 

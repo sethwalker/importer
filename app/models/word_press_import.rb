@@ -1,23 +1,5 @@
 class WordPressImport < Import
 
-  # Put it all together !
-  def execute!(site)
-    if self.start_time.blank? # guard against executing the job multiple times
-      # ShopifyAPI::Product.superclass.site = site # this is for DJ, it can't seem to find the site at execution time unless
-      
-      self.start_time = Time.now
-      self.parse
-      self.save_data
-      self.finish_time = Time.now
-      self.save
-    end
-  end
-
-  # from import.rb
-  def source=(file_data)
-     @file_data = file_data if file_data.original_filename.split(".").last == 'xml'
-   end
-
   def blog_title
     @blog_title ||= REXML::XPath.match(xml, 'rss/channel/title').first.text    
   end
@@ -25,11 +7,7 @@ class WordPressImport < Import
   def original_url
     @original_url ||= REXML::XPath.match(xml, 'rss/channel/link').first.text
   end
-  
-  def skipped(type)
-    guesses[type].to_i - adds[type].to_i
-  end
-  
+    
   def guess
     # Loop through each <item> tag in the file
     REXML::XPath.match(xml, 'rss/channel/item').each do |node|
@@ -44,6 +22,9 @@ class WordPressImport < Import
         comments.each { |c| self.guessed('comment') }
       end      
     end
+    
+  rescue REXML::ParseException => e
+    self.import_errors << e.message
   end
     
   def parse
@@ -83,7 +64,7 @@ class WordPressImport < Import
         added('article')
       end
     end
-
+    
     # comments is a hash of [ShopifyAPI::Comment => ShopifyAPI::Article]
     comments.each do |comment, article|
       comment.blog_id = @blog.id

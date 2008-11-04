@@ -1,12 +1,12 @@
 <h1 class="orange">osCommerce Import</h1>
 
 <div class="light">
-	<p>Here you can import all of your content from an osCommerce shop into a Shopify shop. With this tool you can import all of your products into Shopify.</p>
+	<p>With this tool you can import all of your products from an osCommerce shop into your Shopify shop.</p>
 
 	<% form_for :import, @import, :url => { :action => 'create', :id => params[:id] }, :html => { :multipart => true } do |f| %>
-     <p style="font-weight:bold;margin:0;padding:0;">URL</p> <p style="margin:0;padding:0;">This is the url of your osCommerce shop (eg. 'http://shop.jesse.com'): </p><%= f.text_field :base_url, :style => 'margin: 5px 0px 10px 0px;' %>
-	  <p style="font-weight:bold;margin:0;padding:0;">Export File</p><p style="margin:0;padding:0;">Here you must upload your export file from OsCommerce (instructions are below): <%= f.file_field :source, :style => 'margin-top: 2px;' %></p>
-	  <%= submit_tag "Submit Import", :style => 'margin-top: 15px' %>
+     <p style="font-weight:bold;margin:0;padding:0;">URL</p> <p style="margin:0;padding:0;" class="note">This is the url of your osCommerce shop (eg. 'http://www.frisbeeshop.com'): </p><%= f.text_field :base_url, :style => 'margin: 5px 0px 10px 0px;' %>
+	  <p style="font-weight:bold;margin:0;padding:0;">Export File</p><p style="margin:0;padding:0;" class="note">Here you must upload your export file from OsCommerce (instructions are below): <%= f.file_field :source, :style => 'margin-top: 2px;' %></p>
+	  <%= submit_tag "Submit Import", :disable_with => "Submitting...", :style => 'margin-top: 15px' %>
 	<% end %>
 </div>
 
@@ -16,8 +16,9 @@
 </div>
 </div>
 
-	<h3>1. Log in to your WordPress Site Admin interface.</h3><img class="box"  src="http://img.skitch.com/20081008-ty36xgjpdp34ek4asqpgx3xd7d.jpg" alt="Jesse2019s Frisbee Blog-2-1" class="steps" />
-	<h3>2. Click on Manage.</h3><img class="box" src="http://img.skitch.com/20081008-nq631534rc9wi8p7xf6cgpbuwm.jpg" alt="Jesse2019s Frisbee Blog 203A Dashboard 2014 WordPress" class="steps"/>
-	<h3>3. Click on Export.</h3><img class="box" src="http://img.skitch.com/20081008-pjgugyytryecwrgtwri1kp6fhq.jpg" alt="Jesse2019s Frisbee Blog 203A Posts 2014 WordPress" class="steps"/>
-	<h3>4. Download your export file.</h3><img class="box" src="http://img.skitch.com/20081008-j33fa9kpccu7c5wxy671fp6u8i.jpg" alt="Jesse2019s Frisbee Blog 203A Export 2014 WordPress" class="steps"/>
-	<h3>5. <a href="#">Upload your file here!</a></h3>
+	<h3>1. If you already have the osCommerce 'Easy Populate' feature installed, you can skip to step 3.</h3>
+	<h3>2. Install the osCommerce 'Easy Populate' feature. It is available <%= link_to "here", "http://www.oscommerce.com/community/contributions,500" %>. The feature comes with its own set of instructions which are fairly comprehensive.<p class="note">Note: There exists several versions of 'Easy Populate'. If you already have one installed it will likely work with this Importer, however, this is not guaranteed. If you are encountering problems, please install the latest version of <%= link_to "'Easy Populate'", "http://www.oscommerce.com/community/contributions,500" %>.</p></h3>
+	<h3>3. Log into the Admin interface of your osCommerce shop.</h3><img src="http://img.skitch.com/20081104-fj3w35wjjk5m9fs4x3eyjtxwi2.jpg" alt="admin" class="steps box"/>
+	<h3>4. Select 'Catalog', and then 'Easy Populate'.</h3><img src="http://img.skitch.com/20081104-1iiqb68etympriqfip873w2693.jpg" alt="menu" class="steps box"/>
+	<h3>5. Depending on which version of 'Easy Populate' you have, the interface may look different. You will want to do a <em>complete</em> export with all of the default options.</h3><img src="http://img.skitch.com/20081104-dkfu1e4gry7pa9s9j7ibdhkxes.jpg" alt="easypop" class="steps box"/>
+	<h3>5. <a href="#">Upload your exported file here!</a></h3>

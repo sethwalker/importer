@@ -300,9 +300,10 @@ h1.blue, h2.blue, h3.blue {
   padding: 10px;
 }
 
-.steps {
+img.steps {
 	display: block;
 	padding-bottom: 20px;
+	width: 400px;
 }
 
 h3.message {

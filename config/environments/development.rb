@@ -18,5 +18,5 @@ config.action_controller.perform_caching             = false
 config.action_mailer.delivery_method        = :sendmail
 
 config.after_initialize do
-  ENV['from_address']                 = '[DEV] Shopify <importer@shopifyapps.com>'
+  ENV['from_address']                 = "[DEV] Shopify <importer@shopifyapps.com>"
 end

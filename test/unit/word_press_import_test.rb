@@ -1,5 +1,3 @@
-require File.dirname(__FILE__) + '/../test_api_helper'
-# require File.dirname(__FILE__) + '/../../vendor/plugins/shopify_app/lib/shopify_api.rb'
 require File.dirname(__FILE__) + '/../test_helper'
 
 class WordPressImportTest < ActiveSupport::TestCase

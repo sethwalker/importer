@@ -1,3 +1,14 @@
+<script type="text/javascript" charset="utf-8">
+
+  function requestStatus() {
+    executer.stop();
+    new Ajax.Request('/os_commerce/poll', {method:'get', evalScripts:true, parameters: 'import_id=<%= @import.id %>&format=js' })
+  }
+
+  var executer = new PeriodicalExecuter(requestStatus, 15);
+
+</script>
+
 <div id="confirm" class="light">
   <% if @import && !@import.finished? %>  
     <h2 class="green">
@@ -14,7 +25,7 @@
     </h2>
     <p class="note">
       Job summary: <br /> 
-      <%= @import.mail_message.to_s %> <br /><br />
+      <%= @import.mail_message.to_s.gsub(/\n/, "<br />") %> <br /><br />
     </p>
   <% else %>
   <h2 class="red">

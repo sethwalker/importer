@@ -15,53 +15,9 @@ class Array
   end
 end
 
-class Mailer < ActionMailer::Base
-  def log(url, recipient, message)
-    from       ENV['from_address']
-    recipients recipient
-    subject    "[#{url}] Batch import completed"
-    body       "Importer successfully completed your import. \n\n#{message}"
-  end
-end
-
 class OsCommerceImport < Import
 
-  # Put it all together !
-  def execute!(site, email_recipient)
-    if self.start_time.blank? # guard against executing the job multiple times
-    
-      # initialize
-      ShopifyAPI::Product.superclass.site = site # this is for DJ, it can't seem to find the site at execution time unless
-      self.start_time = Time.now
-      
-      # parse data
-      begin
-        parse
-      rescue NameError => e
-       import_errors << "There was an error parsing your import file."
-      rescue CSV::IllegalFormatError => e
-        import_errors << "There was an error parsing your import file. Your import file is not a valid CSV file."      
-      end
-    
-      # save data
-      begin
-        save_data
-      rescue ActiveResource::ResourceNotFound => e
-        import_errors << "Error importing your shop. Some data could not be saved."
-      rescue ActiveResource::ServerError => e
-        import_errors << "Error importing your shop. Some data could not be saved."
-      rescue ActiveResource::ClientError => e
-        import_errors << "So far, you have imported #{adds['product']} products. This seems to be the maximum number of allowed products for your subscription plan. Please <a href='http://#{site}/admin/accounts/'>upgrade your subscription</a> to allow for more products."
-      end
-      
-      # wrap it up
-      self.finish_time = Time.now
-      self.save
-      
-      # email
-      Mailer.deliver_log(base_url, email_recipient, mail_message)
-    end
-  end
+  validates_presence_of :base_url
 
   def guess
     rows = parse_content(content)
@@ -124,35 +80,13 @@ class OsCommerceImport < Import
           RAILS_DEFAULT_LOGGER.debug "Saving collect....#{collect} for #{product.title}"          
         end
       end
-      RAILS_DEFAULT_LOGGER.debug "================"
-      
-      ####
-      # UPDATE THE QUANTITIES FOR THE VARIANTS
-      #####
-      # all_products = ShopifyAPI::Product.find(:all, :params => {:limit => 1000})
-      # products.each do |outer_product|
-      #   RAILS_DEFAULT_LOGGER.debug "Currently doing product #{outer_product.title}"
-      #   product = all_products.find {|p| p.title == outer_product.title}      
-      #   variants.select{|key, value| value.title == product.title}.each do |variant, variant_product|
-      #     default = ShopifyAPI::Product.find(product.id).attributes['variants'].find { |v| v.title == 'Default' }
-      #     default.inventory_management = 'shopify'
-      #     default.inventory_quantity = variant.inventory_quantity
-      #     
-      #     # default.prefix_options[:product_id] = variant_product.id
-      # 
-      #     if default.save
-      #       RAILS_DEFAULT_LOGGER.debug "Saving variant....#{variant.title} for #{product.title}"      
-      #     end
-      #   end
-      #     
-      #   
-      # end
-    
+      RAILS_DEFAULT_LOGGER.debug "================"      
     end
     
     rescue Exception => e
       RAILS_DEFAULT_LOGGER.debug "Exception: #{e.message}"
       RAILS_DEFAULT_LOGGER.debug "Backtrace: #{e.backtrace}"
+      import_errors << "There was an error saving a product."
       
   end    
 
@@ -167,18 +101,6 @@ class OsCommerceImport < Import
     @product_images ||= Hash.new
   end  
   
-  def collections
-    @collections ||= Array.new
-  end
-  
-  def collects
-    @collects ||= Array.new
-  end
-  
-  # def tags
-  #   @tags ||= Array.new
-  # end
-  
   def variants
     @variants ||= Hash.new
   end
@@ -186,11 +108,19 @@ class OsCommerceImport < Import
   def possible_property_values
     @property_values ||= Hash.new
   end
+  
+  def collections
+    @collections ||= Array.new
+  end
+  
+  def collects
+    @collects ||= Array.new
+  end
   # end memoizations
 
   # helper methods
   def add_product(row)
-    get_product_attributes(row)
+    get_attributes(row)
     products << product = ShopifyAPI::Product.new( :title => @title, :body => @description, :vendor => @vendor , :product_type => @product_type || 'Blank' )
     
     add_product_image(@image_url, product)
@@ -198,7 +128,7 @@ class OsCommerceImport < Import
     add_collection(@collection_name, product)
   end
   
-  def get_product_attributes(row)
+  def get_attributes(row)
     # product
     @title = row['v_products_name_1']
     @description = row['v_products_description_1']
@@ -206,25 +136,23 @@ class OsCommerceImport < Import
     @product_type = row['v_categories_name_1_1'] || row['v_categories_name_1']
 
     # image
-    @image_url = "#{base_url}/images/#{row['v_products_image']}"
-    if not OsCommerceImport.existent_url?(@image_url)
-      @image_url = "#{base_url}/images/#{row['v_products_image_med']}" #try this...
-      if not OsCommerceImport.existent_url?(@image_url)
-        @image_url = ""
-      end
+    if OsCommerceImport.existent_url?("#{base_url}/images/#{row['v_products_image']}")
+      @image_url = "#{base_url}/images/#{row['v_products_image']}"
+    elsif OsCommerceImport.existent_url?("#{base_url}/images/#{row['v_products_image_med']}")
+      @image_url = "#{base_url}/images/#{row['v_products_image_med']}"
+    elsif OsCommerceImport.existent_url?("#{base_url}/images/#{row['v_products_image_lrg']}")
+      @image_url = "#{base_url}/images/#{row['v_products_image_lrg']}"      
+    else
+      @image_url = ""
     end
+    # because you never know...
  
     # collections
-    @collection_name = if not row['v_categories_name_1'].blank? then row['v_categories_name_1'] else row['v_categories_name_1_1'] end
-    
-    # tags
-    # 2.upto(7) do |num|
-    #   tags << row["v_categories_name_#{num}_1"]
-    # end
+    @collection_name = if not row['v_categories_name_1'].blank? then row['v_categories_name_1'] else row['v_categories_name_1_1'] end    
   end 
 
   def add_product_image(url, product)
-    return if url.blank?
+    return if url.blank? || !OsCommerceImport.existent_url?(url)
     
     product_images[ShopifyAPI::Image.new(:src => url)] = product  
   end
@@ -232,45 +160,19 @@ class OsCommerceImport < Import
   def add_variants(row, product)
     if number_of_variants_for(row) <= 1
       create_default_variant(row, product)
+      
     else # more than one variant
-      actual_property_values = Hash.new
+      # TODO: This could probably be optimized or at least compacted :)
       
-      possible_property_values.each do |property_name, property_values|
-        property_name_number = property_name.scan(/v_attribute_options_name_(.)_1/).to_s
-
-        property_values.each do |property_value|
-          property_value_number = property_value.scan(/v_attribute_values_name_#{property_name_number}_(.)_1/).to_s
-          if price = row["v_attribute_values_price_#{property_name_number}_#{property_value_number}"] and not price.blank?
-            # we have a variant
-            actual_property_values["v_attribute_values_price_#{property_name_number}_#{property_value_number}"] = price
-          end
-        end
-      end
-      
-      mapping_values = Hash.new
-      # set up the proper hash for mapping
-      possible_property_values.each do |property_name, property_values|
-        property_name_number = property_name.scan(/v_attribute_options_name_(.)_1/).to_s
-
-        current_matches = actual_property_values.keys.join(" ").scan(/v_attribute_values_price_#{property_name_number}_./)
-        
-        current_matches.each do |match|
-          property_value_number = match.scan(/v_attribute_values_price_#{property_name_number}_(.)/).to_s
-          current_title = row["v_attribute_values_name_#{property_name_number}_#{property_value_number}_1"]
-          current_price = actual_property_values["v_attribute_values_price_#{property_name_number}_#{property_value_number}"]
-          
-          if not mapping_values[property_name_number]
-            mapping_values[property_name_number] = Hash.new
-          end
-          
-          mapping_values[property_name_number].update( { current_title => current_price } )
-          
-        end
-      end
+      # get the actual existing properties
+      actual_property_values = map_possibles_to_actuals(row)
+            
+      # set up the hash in order to map each property to all adjacent properties
+      mapping_values = map_actuals_to_hash(row, actual_property_values)
       
       # DO the mapping
-      titles = Array.new
-      prices = Array.new
+      titles = prices = Array.new
+      
       mapping_values.values.map(&:keys).sequence.each do |arr|
         titles << arr.join(" ")
       end
@@ -288,7 +190,7 @@ class OsCommerceImport < Import
       @base_price = row['v_products_price']
       
       0.upto(titles.size-1) do |index|
-        create_variant(titles[index], @base_price.to_f + prices[index], @weight, @sku, product)
+        create_variant(titles[index], @base_price.to_f + prices[index].to_f, @weight, @sku, product)
       end
       
     end  
@@ -301,11 +203,16 @@ class OsCommerceImport < Import
     @sku = row['v_products_model']
     @quant = row['v_products_quantity']
     
-    create_variant(@title, @price, @weight, @sku, @quant, product)
+    create_variant(@title, @price, @weight, @sku, product, @quant)
   end
   
-  def create_variant(title, price, grams, sku, quant, product)
-    variants[ShopifyAPI::Variant.new( :title => title, :price => price, :grams => grams, :sku => sku, :inventory_quantity => quant )] = product
+  def create_variant(title, price, grams, sku, product, quant = nil)
+    if quant
+      variants[ShopifyAPI::Variant.new( :title => title, :price => price, :grams => grams, :sku => sku, :inventory_management => 'shopify', :inventory_quantity => quant )] = product
+    else
+      variants[ShopifyAPI::Variant.new( :title => title, :price => price, :grams => grams, :sku => sku )] = product
+    end
+
   end
   
   def number_of_variants_for(product)
@@ -319,6 +226,7 @@ class OsCommerceImport < Import
   def add_collection(collection_name, product)
     collection = collections.find { |c| c.title == collection_name }
 
+    # create the collection if it doesn't exist already
     if not collection
       collections << collection = ShopifyAPI::CustomCollection.new( :title => collection_name )      
     end
@@ -326,6 +234,7 @@ class OsCommerceImport < Import
     collects << ShopifyAPI::Collect.new(:collection_id => collection, :product_id => product)
   end
   
+  # this stores a Hash of all the possible combinations of variants (used in mapping multi-variants)
   def store_property_values(row)
     property_names = row.keys.join(" ").scan(/v_attribute_options_name_._1/)
 
@@ -349,10 +258,47 @@ class OsCommerceImport < Import
     rows = row_data.map {|row| Hash[*headers.zip(row).flatten] }
   end
   
+  def map_possibles_to_actuals(row)
+    actual_property_values = Hash.new
+    possible_property_values.each do |property_name, property_values|
+      property_name_number = property_name.scan(/v_attribute_options_name_(.)_1/).to_s
+
+      property_values.each do |property_value|
+        property_value_number = property_value.scan(/v_attribute_values_name_#{property_name_number}_(.)_1/).to_s
+        if price = row["v_attribute_values_price_#{property_name_number}_#{property_value_number}"] and not price.blank?
+          # we have a variant here
+          actual_property_values["v_attribute_values_price_#{property_name_number}_#{property_value_number}"] = price
+        end
+      end
+    end
+    actual_property_values
+  end
   
+  def map_actuals_to_hash(row, actual_property_values)
+    mapping_values = Hash.new
+    # set up the proper hash for mapping
+    possible_property_values.each do |property_name, property_values|
+      property_name_number = property_name.scan(/v_attribute_options_name_(.)_1/).to_s
+
+      current_matches = actual_property_values.keys.join(" ").scan(/v_attribute_values_price_#{property_name_number}_./)
+      
+      current_matches.each do |match|
+        property_value_number = match.scan(/v_attribute_values_price_#{property_name_number}_(.)/).to_s
+        current_title = row["v_attribute_values_name_#{property_name_number}_#{property_value_number}_1"]
+        current_price = actual_property_values["v_attribute_values_price_#{property_name_number}_#{property_value_number}"]
+        
+        if not mapping_values[property_name_number]
+          mapping_values[property_name_number] = Hash.new
+        end
+        
+        mapping_values[property_name_number].update( { current_title => current_price } )
+        
+      end
+    end
+    mapping_values
+  end
   
-  
-  def self.existent_url?(url)
+  def OsCommerceImport.existent_url?(url)
     begin
       uri = URI.parse(url)
     rescue URI::InvalidURIError => e
