@@ -166,12 +166,13 @@ class OsCommerceImport < Import
       
       # get the actual existing properties
       actual_property_values = map_possibles_to_actuals(row)
-            
+
       # set up the hash in order to map each property to all adjacent properties
       mapping_values = map_actuals_to_hash(row, actual_property_values)
       
       # DO the mapping
-      titles = prices = Array.new
+      titles = Array.new
+      prices = Array.new
       
       mapping_values.values.map(&:keys).sequence.each do |arr|
         titles << arr.join(" ")
