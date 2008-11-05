@@ -22,9 +22,9 @@ class WordPressController < ApplicationController
         render :action => "new"
       end
 
-    # rescue NameError => e
-    #   flash[:error] = "There was an error parsing your input file."
-    #   render :action => "new"
+    rescue NameError => e
+      flash[:error] = "There was an error parsing your input file."
+      render :action => "new"
     rescue REXML::ParseException => e
       flash[:error] = "Error importing blog. Your file is not valid XML."      
       render :action => "new"

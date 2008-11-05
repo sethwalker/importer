@@ -38,7 +38,7 @@ class OsCommerceImport < Import
   end
 
   def save_data
-    
+
     # save product
     products.each do |product|
       if product.save

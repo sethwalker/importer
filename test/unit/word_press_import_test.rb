@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../test_helper'
+require File.dirname(__FILE__) + '/../test_api_helper'
 
 class WordPressImportTest < ActiveSupport::TestCase
 
@@ -17,11 +17,31 @@ class WordPressImportTest < ActiveSupport::TestCase
   end
   
   def test_guess
-    @import.guess
+    assert @import.guess
+    assert @import.save
     
     assert_equal 4, @import.guesses['article']
     assert_equal 1, @import.guesses['page']
     assert_equal 3, @import.guesses['comment']
+  end
+  
+  def test_parse
+    WordPressImport.any_instance.expects(:add_article).times(4)
+    WordPressImport.any_instance.expects(:add_page).times(1)
+    
+    assert @import.parse
+    assert @import.save
+  end
+  
+  def test_save_data
+    ShopifyAPI::Article.any_instance.expects(:save).times(8)
+    ShopifyAPI::Comment.any_instance.expects(:save).times(3)
+    ShopifyAPI::Page.any_instance.expects(:save).times(2)
+    ShopifyAPI::Blog.any_instance.expects(:save).times(1)
+    
+    assert @import.parse
+    assert @import.save_data
+    assert @import.save
   end
   
   def test_should_throw_exception_if_xml_is_invalid
