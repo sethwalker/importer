@@ -39,7 +39,7 @@ class WordPressController < ApplicationController
       raise ActiveRecord::RecordNotFound if @import.shop_url != current_shop.url
 
       @import.update_attribute :submitted_at, Time.now
-      @import.execute!(session[:shopify].site, Import.email_address)
+      @import.send_later(:execute!, session[:shopify].site, Import.email_address)
     rescue ActiveRecord::RecordNotFound => e
       flash[:error] = "Either the import job that you are attempting to run does not exist or you are attempting to run someone else's import job..."
     end
