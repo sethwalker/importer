@@ -37,3 +37,4 @@ db/backup
 
 *.db
 
+config/shopify.yml
