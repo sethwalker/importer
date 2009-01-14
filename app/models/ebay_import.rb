@@ -34,8 +34,6 @@ class EbayImport < Import
       # parse and save data
       begin
         parse_and_save_data
-      rescue CSV::IllegalFormatError => e
-        self.import_errors << "There was an error parsing your import file. Your import file is not a valid CSV file."      
       rescue REXML::ParseException => e
         self.import_errors << "There was an error parsing your import file. Your import file is not a valid XML file."      
       rescue ActiveResource::ResourceNotFound => e
@@ -60,7 +58,7 @@ class EbayImport < Import
       :title => item.title,
       :body => "<notextile>#{EbayImport.get_item_description(item)}</notextile>",
       :vendor => 'None provided',
-      :product_type => item.primary_category.category_name.split(/[,:]/).first || 'None provided',
+      :product_type => (item.primary_category.category_name.split(/[,:]/).first || 'None provided'),
       :tags => item.primary_category.category_name.split(/[,:]/).join(","),
       :variants => [
         ShopifyAPI::Variant.new(

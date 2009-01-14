@@ -24,10 +24,6 @@ class EbayAccount < ActiveRecord::Base
   validates_presence_of :shop
   has_many :ebay_imports
   
-  def ebay_site
-    @site ||= Site.find_by_ebay_id(ebay_site_id)
-  end
-  
   def ebay
     @ebay ||= Ebay::Api.new(:auth_token => ebay_token)
   end
