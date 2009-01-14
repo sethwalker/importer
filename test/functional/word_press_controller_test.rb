@@ -13,9 +13,8 @@ class WordPressControllerTest < ActionController::TestCase
     ShopifyAPI::Session.stubs(:valid?).returns(true)
     ShopifyAPI::Session.stubs(:site).returns('localhost')
     
-    get 'login/finalize'
-    session['shopify'] = ShopifyAPI::Session.new("localhost")
-
+    set_shopify_session
+    
     @import = WordPressImport.new
     @import.shop_url = 'jessetesting.myshopify.com'
     @import.content = File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press/word_press_import.xml').read

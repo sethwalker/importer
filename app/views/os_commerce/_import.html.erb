@@ -25,7 +25,11 @@
     </h2>
     <p class="note">
       Job summary: <br /> 
-      <%= @import.mail_message.to_s.gsub(/\n/, "<br />") %> <br /><br />
+      <%- unless @import.mail_message.blank? %>
+        <%= @import.mail_message.to_s.gsub(/\n/, "<br />")%>
+      <% else %>
+        No changes.
+      <% end %>
     </p>
   <% else %>
   <h2 class="red">
