@@ -1,4 +1,27 @@
+# == Schema Information
+# Schema version: 20081117161638
+#
+# Table name: imports
+#
+#  id              :integer(11)     not null, primary key
+#  created_at      :datetime
+#  updated_at      :datetime
+#  content         :text(2147483647
+#  start_time      :datetime
+#  finish_time     :datetime
+#  shop_url        :string(255)
+#  adds            :text
+#  guesses         :text
+#  type            :string(255)
+#  base_url        :string(255)
+#  submitted_at    :datetime
+#  import_errors   :text
+#  ebay_account_id :integer(11)
+#
+
 class WordPressImport < Import
+  
+  validates_presence_of  :content, :on => :create      # must have content just on creation of import
 
   def blog_title
     @blog_title ||= REXML::XPath.match(xml, 'rss/channel/title').first.text    
@@ -28,9 +51,6 @@ class WordPressImport < Import
   end
     
   def parse
-    # Create a new blog with the title from Wordpress
-    @blog = ShopifyAPI::Blog.new(:title => blog_title)
-
     # Loop through each <item> tag in the file
     REXML::XPath.match(xml, 'rss/channel/item').each do |node|
       case node.elements.find {|e| e.name == "post_type" }.text
@@ -53,10 +73,10 @@ class WordPressImport < Import
       end
     end
 
-    @blog.save    
+    blog.save    
     articles.each do |a|  
       current_saved_date = a.published_at
-      a.prefix_options[:blog_id] = @blog.id
+      a.prefix_options[:blog_id] = blog.id
       a.save
       
       a.published_at = current_saved_date
@@ -67,7 +87,7 @@ class WordPressImport < Import
     
     # comments is a hash of [ShopifyAPI::Comment => ShopifyAPI::Article]
     comments.each do |comment, article|
-      comment.blog_id = @blog.id
+      comment.blog_id = blog.id
       comment.article_id = article.id
       if comment.save
         added('comment')
@@ -92,6 +112,10 @@ class WordPressImport < Import
     @comments ||= Hash.new
   end
   
+  def blog
+    @blog ||= ShopifyAPI::Blog.new(:title => blog_title)
+  end
+  
   def add_page(node)
     get_attributes(node)    
     pages << ShopifyAPI::Page.new( :title => @title, :body => @body, :author => @author, :published_at => @pub_date )
@@ -112,7 +136,7 @@ class WordPressImport < Import
   end
   
   def add_comments(nodes, article)
-    @blog.commentable = 'yes' unless @blog.comments_enabled?
+    blog.commentable = 'yes' unless blog.comments_enabled?
     
     nodes.each do |comment_node|
       # We have to add a prefix from the root node so that REXML is happy
@@ -125,6 +149,8 @@ class WordPressImport < Import
       email = @comment_root_node.elements.select { |e| e.name == "comment_author_email" }.first.text
       body = @comment_root_node.elements.select { |e| e.name == "comment_content" }.first.text
       pub_date = @comment_root_node.elements.select { |e| e.name == "comment_date" }.first.text
+      
+      email = 'blank@blank.com' if email.blank?
 
       comments[ShopifyAPI::Comment.new( :body => body, :author => author, :email => email, :published_at => pub_date )] = article
     end    
