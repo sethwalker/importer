@@ -1,15 +1,5 @@
 ActionController::Routing::Routes.draw do |map|
-  map.connect '/dashboard/:action/:blog/:article', :controller => 'dashboard'
-  map.connect '/login/:action', :controller => 'login'
-
-  # map.connect '/import/:type/upload', :controller => 'import', :action => 'upload'
-  # map.connect '/import/:type/create', :controller => 'import', :action => 'create'
-  # map.connect '/import/:type/import', :controller => 'import', :action => 'import'
-   
-  map.connect '', :controller => 'dashboard', :action => 'index'
-  map.connect '/login/:action', :controller => 'login'
-  
-  map.connect '/import/:action', :controller => 'import'
+  map.root :controller => 'dashboard'
   
   # The priority is based upon order of creation: first created -> highest priority.
 

@@ -1,0 +1,4 @@
+page.replace_html 'preview', :partial => 'preview'
+page.remove 'waiting'
+page.visual_effect :toggle_blind, 'preview'
+page.visual_effect :toggle_blind, 'buttons'

@@ -1,0 +1,41 @@
+<script type="text/javascript" charset="utf-8">
+  Event.observe(window, 'load', function() {
+    new Ajax.Request('<%= url_for :action => "preview" %>', { 
+		  method: 'get'
+		});
+  });
+</script>
+
+<h1 class="orange">eBay Import</h1>
+
+<div class="light" id="confirm">
+	<p>With this tool you can import all of your products from your eBay store into your Shopify shop.</p>
+	<div id="buttons" style="display:none;">
+	  <p class="note">If this data looks correct and you choose to start the import then we will import all of your eBay products into Shopify.</p>
+	  <% form_remote_tag :url => {:action => 'import'}, :after => "$('preview').hide(); $('warning').show();" do %>
+			<%= submit_tag 'Start Import', :disable_with => "Starting..." %> or <%= link_to 'Cancel', '/' %>
+		<% end %>
+  </div>
+</div>
+
+<div class="light">
+  <div id="waiting">
+    <h3 class="green" style="margin: 10px;">
+      <span class="message">Generating Preview </span>
+      <%= image_tag '/images/spinner.gif'%>
+    </h3>
+  </div>
+  <div id="preview" style="display:none;">
+  </div>
+  
+  <div class="box" id="warning" style="display:none;">
+  	<div class="wrapper">
+  		<p class="note">
+  			The import may take a long time, depending on the size of your import file. If you are importing a shop with lots of products, then the uploading process may take a while.
+  		</p>
+  		<p class="note">
+  			Please be patient :)
+  		</p>
+  	</div> 
+  </div>
+</div>

@@ -1,0 +1,20 @@
+<h2 id="preview-title">Preview</h2>
+
+<% if @items_list.empty? %>
+  <p class="note">Couldn't find any products in your eBay store.</p>
+<% end %>
+
+<% @items_list.each do |item| %>
+  <div class="product box">
+    <div class="wrapper">
+      <%= image_tag item.picture_details.picture_url, :style => 'width: 100px;' rescue '' %>
+
+        <h4><%= item.title %></h4>
+
+        <p class="price"><%= item.start_price %> <%= current_shop.shop.currency %></p>
+        <p style="margin-bottom: 0"><span class="note">tags: </span><%= item.primary_category.category_name.split(/[,:]/).join(",") rescue nil %></p>
+
+      <div style="clear:left"></div>
+    </div>
+  </div>
+<% end %>
