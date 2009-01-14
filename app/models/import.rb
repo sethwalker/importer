@@ -1,7 +1,31 @@
+# == Schema Information
+# Schema version: 20081117161638
+#
+# Table name: imports
+#
+#  id              :integer(11)     not null, primary key
+#  created_at      :datetime
+#  updated_at      :datetime
+#  content         :text(2147483647
+#  start_time      :datetime
+#  finish_time     :datetime
+#  shop_url        :string(255)
+#  adds            :text
+#  guesses         :text
+#  type            :string(255)
+#  base_url        :string(255)
+#  submitted_at    :datetime
+#  import_errors   :text
+#  ebay_account_id :integer(11)
+#
+
+require 'csv'
+require 'net/http'
+require 'uri'
+
 class Import < ActiveRecord::Base
   
   attr_protected :shop_url
-  validates_presence_of  :content, :on => :create      # must have content just on creation of import
   validates_presence_of  :shop_url
   
   before_create :init_serials
@@ -51,7 +75,11 @@ class Import < ActiveRecord::Base
   end
   
   def skipped(type)
-    guesses[type].to_i - adds[type].to_i
+    if guesses and adds
+      guesses[type].to_i - adds[type].to_i
+    else
+      0
+    end
   end
   
   def mail_message
@@ -59,7 +87,13 @@ class Import < ActiveRecord::Base
     adds.each { |key,value| message += "#{value} #{key}s successfully imported.\n"} if adds
     message += "\n"
     guesses.keys.each { |key| message += "#{skipped(key)} #{key}s skipped.\n"} if guesses
+    message += "\n"
+    import_errors.each { |err| message += "#{err}\n"} if import_errors
     message
+  end
+  
+  def builders
+    @builders ||= Array.new
   end
   
   # Put it all together !
@@ -103,14 +137,26 @@ class Import < ActiveRecord::Base
   
   # class methods
   def Import.email_address
-    http = Net::HTTP.new(ShopifyAPI::Product.superclass.site.host, ShopifyAPI::Product.superclass.site.port)
-    http.use_ssl = true
-    
-    req = Net::HTTP::Get.new("/admin/shop.xml")
-    req.basic_auth(ShopifyAPI::Product.superclass.site.user, ShopifyAPI::Product.superclass.site.password)
-    
-    response = http.request(req)
-    REXML::XPath.first(REXML::Document.new(response.body), "//email").text
+    ShopifyAPI::Shop.current.email
+  end
+  
+  def Import.existent_url?(url)
+    begin
+      uri = URI.parse(url)
+    rescue URI::InvalidURIError => e
+      RAILS_DEFAULT_LOGGER.debug "Invalid URI: #{uri}"
+      return false
+    end
+
+    begin
+      http_conn = Net::HTTP.new(uri.host, uri.port)
+      resp, data = http_conn.head(uri.path , nil)
+    rescue Exception => e
+      RAILS_DEFAULT_LOGGER.debug "Invalid URI: #{uri}"
+      return false
+    end
+
+    resp.code == "200"
   end
         
   # Children of this class should overwrite these methods

@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../test_api_helper'
+require 'test_helper'
 
 class OsCommerceImportTest < ActiveSupport::TestCase
 
@@ -9,8 +9,6 @@ class OsCommerceImportTest < ActiveSupport::TestCase
     @import.base_url = 'http://demo.oscommerce.com'
     @import.shop_url = 'jessetesting.myshopify.com'
     @import.save    
-    
-    OsCommerceImport.stubs(:existent_url?).returns(true)
   end
 
   def test_parse
@@ -24,5 +22,13 @@ class OsCommerceImportTest < ActiveSupport::TestCase
     @import.guess
 
     assert_equal 27, @import.guesses['product']
+  end
+  
+  def test_should_not_create_import_wihtout_content
+    @new_import = OsCommerceImport.new
+    assert !@new_import.save
+    
+    @new_import.content = 'test'
+    @new_import.save
   end
 end

@@ -1,6 +1,25 @@
+# == Schema Information
+# Schema version: 20081117161638
+#
+# Table name: imports
+#
+#  id              :integer(11)     not null, primary key
+#  created_at      :datetime
+#  updated_at      :datetime
+#  content         :text(2147483647
+#  start_time      :datetime
+#  finish_time     :datetime
+#  shop_url        :string(255)
+#  adds            :text
+#  guesses         :text
+#  type            :string(255)
+#  base_url        :string(255)
+#  submitted_at    :datetime
+#  import_errors   :text
+#  ebay_account_id :integer(11)
+#
+
 require 'csv'
-require 'uri'
-require 'net/http'
 
 # From: http://www.rubyonrailsblog.com/articles/2006/08/31/permutations-in-ruby-can-be-fun (in the comments)
 # Author: Brian Mitchell
@@ -18,6 +37,7 @@ end
 class OsCommerceImport < Import
 
   validates_presence_of :base_url
+  validates_presence_of  :content, :on => :create      # must have content just on creation of import
 
   def guess
     rows = parse_content(content)
@@ -38,94 +58,42 @@ class OsCommerceImport < Import
   end
 
   def save_data
-
-    # save product
-    products.each do |product|
-      if product.save
-        RAILS_DEFAULT_LOGGER.debug "Saving product #{product.title}...."
+    # save each builder
+    builders.each do |builder|
+      if builder.save
         added('product')
+      else
+        self.import_errors << builder.errors
       end
-      
-      # save it's image
-      product_images.select{|key,value| value.id == product.id}.each do |image, image_product|
-        image.prefix_options[:product_id] = image_product.id
-    
-        if OsCommerceImport.existent_url?(image.src.to_s) && image.save
-          RAILS_DEFAULT_LOGGER.debug "Saving image....#{image.src} for #{product.title}"
-        end
-      end
-    
-      # save it's variant
-      variants.select{|key, value| value.id == product.id}.each do |variant, variant_product|
-        if default = ShopifyAPI::Product.find(variant_product.id).attributes['variants'].find { |v| v.title == 'Default' }
-          default.attributes.update(variant.attributes)
-          variant = default
-        end
-    
-        variant.prefix_options[:product_id] = variant_product.id
-    
-        if variant.save
-          RAILS_DEFAULT_LOGGER.debug "Saving variant....#{variant.title} for #{product.title}"      
-        end
-      end
-    
-      # save it's collect
-      collects.select{|c| c.product_id.id == product.id}.each do |collect|
-        collect.collection_id.save if collect.collection_id.id == nil
-      
-        collect.product_id = collect.product_id.id
-        collect.collection_id = collect.collection_id.id
-    
-        if collect.save
-          RAILS_DEFAULT_LOGGER.debug "Saving collect....#{collect} for #{product.title}"          
-        end
-      end
-      RAILS_DEFAULT_LOGGER.debug "================"      
     end
-    
+
     rescue Exception => e
       RAILS_DEFAULT_LOGGER.debug "Exception: #{e.message}"
       RAILS_DEFAULT_LOGGER.debug "Backtrace: #{e.backtrace}"
-      import_errors << "There was an error saving a product."
-      
+      self.import_errors << "There was an error saving a product."
   end    
 
   private  
 
   # begin memoizations
-  def products
-    @products ||= Array.new
-  end  
-
-  def product_images
-    @product_images ||= Hash.new
-  end  
-  
-  def variants
-    @variants ||= Hash.new
-  end
-  
   def possible_property_values
     @property_values ||= Hash.new
-  end
-  
-  def collections
-    @collections ||= Array.new
-  end
-  
-  def collects
-    @collects ||= Array.new
   end
   # end memoizations
 
   # helper methods
   def add_product(row)
     get_attributes(row)
-    products << product = ShopifyAPI::Product.new( :title => @title, :body => @description, :vendor => @vendor , :product_type => @product_type || 'Blank' )
     
-    add_product_image(@image_url, product)
-    add_variants(row, product)
-    add_collection(@collection_name, product)
+    builders << ProductBuilder.new({ 
+      :title => @title, 
+      :body => @description, 
+      :vendor => @vendor , 
+      :product_type => @product_type || 'Blank', 
+      :variants => add_variants(row),
+      :images => add_product_image(@image_url),
+      :collection => @collection_name
+    })
   end
   
   def get_attributes(row)
@@ -136,11 +104,11 @@ class OsCommerceImport < Import
     @product_type = row['v_categories_name_1_1'] || row['v_categories_name_1']
 
     # image
-    if OsCommerceImport.existent_url?("#{base_url}/images/#{row['v_products_image']}")
+    if Import.existent_url?("#{base_url}/images/#{row['v_products_image']}")
       @image_url = "#{base_url}/images/#{row['v_products_image']}"
-    elsif OsCommerceImport.existent_url?("#{base_url}/images/#{row['v_products_image_med']}")
+    elsif Import.existent_url?("#{base_url}/images/#{row['v_products_image_med']}")
       @image_url = "#{base_url}/images/#{row['v_products_image_med']}"
-    elsif OsCommerceImport.existent_url?("#{base_url}/images/#{row['v_products_image_lrg']}")
+    elsif Import.existent_url?("#{base_url}/images/#{row['v_products_image_lrg']}")
       @image_url = "#{base_url}/images/#{row['v_products_image_lrg']}"      
     else
       @image_url = ""
@@ -151,15 +119,15 @@ class OsCommerceImport < Import
     @collection_name = if not row['v_categories_name_1'].blank? then row['v_categories_name_1'] else row['v_categories_name_1_1'] end    
   end 
 
-  def add_product_image(url, product)
-    return if url.blank? || !OsCommerceImport.existent_url?(url)
+  def add_product_image(url)
+    return if url.blank? || !Import.existent_url?(url)
     
-    product_images[ShopifyAPI::Image.new(:src => url)] = product  
+    ShopifyAPI::Image.new(:src => url)
   end
     
-  def add_variants(row, product)
+  def add_variants(row)
     if number_of_variants_for(row) <= 1
-      create_default_variant(row, product)
+      create_default_variant(row)
       
     else # more than one variant
       # TODO: This could probably be optimized or at least compacted :)
@@ -190,28 +158,30 @@ class OsCommerceImport < Import
       @sku = row['v_products_model']
       @base_price = row['v_products_price']
       
+      @variants = []
       0.upto(titles.size-1) do |index|
-        create_variant(titles[index], @base_price.to_f + prices[index].to_f, @weight, @sku, product)
+        variants << create_variant(titles[index], @base_price.to_f + prices[index].to_f, @weight, @sku)
       end
       
+      @variants
     end  
   end
         
-  def create_default_variant(row, product)
+  def create_default_variant(row)
     @title = 'Default'
     @price = row['v_products_price']
     @weight = row['v_products_weight']
     @sku = row['v_products_model']
     @quant = row['v_products_quantity']
     
-    create_variant(@title, @price, @weight, @sku, product, @quant)
+    create_variant(@title, @price, @weight, @sku, @quant)
   end
   
-  def create_variant(title, price, grams, sku, product, quant = nil)
+  def create_variant(title, price, grams, sku, quant = nil)
     if quant
-      variants[ShopifyAPI::Variant.new( :title => title, :price => price, :grams => grams, :sku => sku, :inventory_management => 'shopify', :inventory_quantity => quant )] = product
+      ShopifyAPI::Variant.new( :title => title, :price => price, :grams => grams, :sku => sku, :inventory_management => 'shopify', :inventory_quantity => quant )
     else
-      variants[ShopifyAPI::Variant.new( :title => title, :price => price, :grams => grams, :sku => sku )] = product
+      ShopifyAPI::Variant.new( :title => title, :price => price, :grams => grams, :sku => sku )
     end
 
   end
@@ -222,17 +192,6 @@ class OsCommerceImport < Import
       counter += 1 if header =~ /v_attribute_values_price/ && !value.blank?
     end
     counter
-  end
-  
-  def add_collection(collection_name, product)
-    collection = collections.find { |c| c.title == collection_name }
-
-    # create the collection if it doesn't exist already
-    if not collection
-      collections << collection = ShopifyAPI::CustomCollection.new( :title => collection_name )      
-    end
-    
-    collects << ShopifyAPI::Collect.new(:collection_id => collection, :product_id => product)
   end
   
   # this stores a Hash of all the possible combinations of variants (used in mapping multi-variants)
@@ -297,25 +256,6 @@ class OsCommerceImport < Import
       end
     end
     mapping_values
-  end
-  
-  def OsCommerceImport.existent_url?(url)
-    begin
-      uri = URI.parse(url)
-    rescue URI::InvalidURIError => e
-      RAILS_DEFAULT_LOGGER.debug "Invalid URI: #{uri}"
-      return false
-    end
-
-    begin
-      http_conn = Net::HTTP.new(uri.host, uri.port)
-      resp, data = http_conn.head(uri.path , nil)
-    rescue Exception => e
-      RAILS_DEFAULT_LOGGER.debug "Invalid URI: #{uri}"
-      return false
-    end
-
-    resp.code == "200"
   end
   
 end

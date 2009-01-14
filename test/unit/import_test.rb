@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../test_helper'
+require 'test_helper'
 
 class ImportTest < ActiveSupport::TestCase
   
@@ -11,19 +11,13 @@ class ImportTest < ActiveSupport::TestCase
   def test_saving_model_should_write_file_to_db
     @data = File.open(File.dirname(__FILE__) + '/../fixtures/files/word_press/word_press_import.xml')
     @original_data = @data.read
-    @new_import = Import.new( :content => @original_data)
+    @new_import = WordPressImport.new( :content => @original_data)
     @new_import.save
 
     assert_equal @original_data, @new_import.content
   end
   
-  def test_should_not_create_import_wihtout_content
-    @new_import = Import.new()
-    assert !@new_import.save
-  end
-  
   def test_should_be_able_to_add_and_guess
-    RAILS_DEFAULT_LOGGER.debug "=======my method"
     hashes = [@import.adds, @import.guesses]
     
     hashes.each do |hash|
@@ -48,12 +42,12 @@ class ImportTest < ActiveSupport::TestCase
   end
     
   def test_should_not_allow_creation_of_import_without_content
-    @import = Import.new
+    @import = WordPressImport.new
     assert !@import.save
   end
   
   def test_should_not_save_without_site
-    @import = Import.new( :content => "meaningless" )
+    @import = WordPressImport.new( :content => "meaningless" )
     assert !@import.save
     
     @import.shop_url = "http://testing.com"
