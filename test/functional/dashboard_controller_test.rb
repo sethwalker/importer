@@ -1,7 +1,7 @@
-require File.dirname(__FILE__) + '/../test_helper'
+require 'test_helper'
 
 class DashboardControllerTest < ActionController::TestCase
-  def test_index_returns_success
+  test "index displays page" do
     get :index
     
     assert_response :ok
