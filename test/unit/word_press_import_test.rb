@@ -62,15 +62,6 @@ class WordPressImportTest < ActiveSupport::TestCase
     end
   end
 
-  def test_should_throw_exception_if_xml_format_is_invalid
-    @import.content = '<?xml version="1.0" encoding="UTF-8"?> <wordpress> </wordpress>'
-    @import.save
-
-    assert_raise NoMethodError do 
-      @import.parse
-    end
-  end  
-  
   def test_should_add_default_email_to_comments_if_missing
     ShopifyAPI::Blog.any_instance.stubs(:new).returns({:comments_enabled => true, :title => 'blog_title'})
     
