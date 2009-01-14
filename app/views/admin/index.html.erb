@@ -1,0 +1,63 @@
+<table>
+  <tr>
+    <th>
+      ID
+    </th>
+    <th>
+      Type
+    </th>
+    <th>
+      Shopify Shop
+    </th>
+    <th>
+      Submitted At
+    </th>
+    <th>
+      Running Time
+    </th>
+    <th>
+      Their URL
+    </th>
+    <th>
+      Content
+    </th>
+    <th>
+      Summary
+    </th>
+    <th>
+      Errors
+    </th>
+  </tr>
+  
+  <% @imports.each do |import| %>
+    <tr>
+      <td>
+        <%= import.id %>
+      </td>
+      <td>
+        <%= import.class %>
+      </td>
+      <td>
+        <%= link_to import.shop_url, "http://#{import.shop_url}" %>
+      </td>
+      <td>
+        <%= import.submitted_at.to_s(:short) if import.submitted_at %>
+      </td>
+      <td>
+        <%= distance_of_time_in_words(import.start_time, import.finish_time) if import.start_time and import.finish_time %>
+      </td>
+      <td>
+        <%= link_to import.base_url.gsub('http://www.', ''), import.base_url if import.base_url %>
+      </td>
+      <td>
+        <%= link_to 'Raw Data', :action => 'content', :id => import.id %>
+      </td>
+      <td>
+        <%= link_to 'Summary', :action => 'summary', :id => import.id %>
+      </td>
+      <td>
+        <%= link_to 'Errors', :action => 'errors', :id => import.id %>
+      </td>
+    </tr>
+  <% end %>
+</table>
