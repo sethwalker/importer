@@ -101,9 +101,6 @@ class EbayImport < Import
       response = ebay_account.ebay.get_my_ebay_selling(
         :active_list => Ebay::Types::ItemListCustomization.new(
           :pagination => Ebay::Types::Pagination.new( :entries_per_page => 25, :page_number => current_page )
-        ),
-        :unsold_list => Ebay::Types::ItemListCustomization.new(
-          :pagination => Ebay::Types::Pagination.new( :entries_per_page => 25, :page_number => current_page )
         )
       )
 
@@ -112,13 +109,8 @@ class EbayImport < Import
         save_builder build_item(item_response.item)
       end rescue nil
     
-      response.unsold_list.items.each do |item|
-        item_response = ebay_account.ebay.get_item(:item_id => item.item_id)
-        save_builder build_item(item_response.item)
-      end rescue nil
-      
       current_page += 1
-    end while (response.active_list.pagination_result.total_number_of_pages > current_page || response.unsold_list.pagination_result.total_number_of_pages > current_page)
+    end while response.active_list.pagination_result.total_number_of_pages > current_page
     
     list_items
   end

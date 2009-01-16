@@ -18,19 +18,11 @@ class EbayController < ApplicationController
     begin
       response = current_account.ebay.get_my_ebay_selling(
         :active_list => Ebay::Types::ItemListCustomization.new(
-          :pagination => Ebay::Types::Pagination.new( :entries_per_page => 2, :page_number => 1 )
-        ),
-        :unsold_list => Ebay::Types::ItemListCustomization.new(
-          :pagination => Ebay::Types::Pagination.new( :entries_per_page => 2, :page_number => 1 )
+          :pagination => Ebay::Types::Pagination.new( :entries_per_page => 4, :page_number => 1 )
         )
       )
 
       response.active_list.items.each do |item|
-        item_response = current_account.ebay.get_item(:item_id => item.item_id)
-        @items_list << item_response.item
-      end rescue nil
-      
-      response.unsold_list.items.each do |item|
         item_response = current_account.ebay.get_item(:item_id => item.item_id)
         @items_list << item_response.item
       end rescue nil
