@@ -1,0 +1,386 @@
+= XML-MAPPING: XML-to-object (and back) mapper for Ruby, including XPath interpreter
+
+Xml-mapping is an easy to use, extensible library that allows you to
+semi-automatically map Ruby objects to XML trees and vice versa. It is
+easy to use and has a modular design that allows for easy extension of
+its functionality.
+
+== Download
+
+For downloading the latest version, CVS repository access etc. go to:
+
+http://rubyforge.org/projects/xml-mapping/
+
+== Example
+
+(example document stolen + extended from
+http://www.castor.org/xml-mapping.html)
+
+=== Input document:
+
+  :include: order.xml
+
+=== Mapping class declaration:
+
+  :include: order.rb
+
+=== Usage:
+
+  :include: order_usage.intout
+
+
+== Description
+
+As shown in the example, you have to include XML::Mapping into a class
+to turn it into a "mapping class". There are no other restrictions
+imposed on mapping classes; you can add attributes and methods to
+them, include additional modules in them, derive them from other
+classes, derive other classes from them etc.pp.
+
+An instance of a mapping class can be created from/converted into an
+XML node by means of instance methods like XML::Mapping.load_from_xml,
+XML::Mapping#save_to_xml, XML::Mapping.load_from_file,
+XML::Mapping#save_to_file. Special class methods like "text_node",
+"array_node" etc., called "node factory methods", may be called from
+the body of the class definition to define instance attributes that
+are automatically and bidirectionally mapped to subtrees of the XML
+element an instance of the class is mapped to. For example, in the
+definition
+
+  class Address
+    include XML::Mapping
+
+    text_node :city, "City"
+    text_node :state, "State"
+    numeric_node :zip, "ZIP"
+    text_node :street, "Street"
+  end
+
+the first call to #text_node creates an attribute named "city" which
+is mapped to the text of the XML child element defined by the XPath
+expression "City" (xml-mapping includes an XPath interpreter that can
+also be used seperately; see below). When you create an instance of
++Address+ from an XML element (using Address.load_from_file(file_name)
+or Address.load_from_xml(rexml_element)), that instance's "city"
+attribute will be set to the text of the XML element's "City" child
+element. When you convert an instance of Address into an XML element,
+a sub-element "City" is added and it text is set to the current value
+of the +city+ attribute. The other node types (numeric_node,
+array_node etc.) work analogously. The node types +object_node+,
++array_node+, and +hash_node+ recursively map sub-trees to instances
+of mapping classes (as opposed to simple types like String
+etc.). For example, with the line
+
+  array_node :signatures, "Signed-By", "Signature", :class=>Signature, :default_value=>[]
+
+, an attribute named "signatures" is added to the surrounding class
+(here: Order); the attribute will be an array whose elements
+correspond to the XML elements yielded by the XPath
+"Signed-By/Signature". Each element will be of class +Signature+ (each
+array element is created from the corresponding XML element by just
+calling <tt>Signature.load_from_xml(the_xml_element)</tt>). The reason
+why the path "Signed-By/Signature" is provieded in two arguments
+instead of just one combined one becomes apparent when marshalling the
+array (along with the surrounding object) back into a sequence of XML
+elements. When that happens, "Signed-By" names the common base element
+for all those elements, and "Signature" is the path that will be
+duplicated for each element. The input document in the example above
+shows how this ends up looking.
+
+Hash nodes work similarly, but they define hash-valued attributes
+instead of array-valued ones.
+
+Refer to the reference documentation for details about the node types
+that are included in the xml-mapping library.
+
+
+=== Default values
+
+For each node you may define a _default value_ which will be set if
+there was no value defined for the attribute in the XML source.
+
+From the example:
+
+  class Signature
+    include XML::Mapping
+
+    text_node :position, "Position", :default_value=>"Some Employee"
+  end
+
+The semantics of default values are as follows:
+
+- when creating a new instance from scratch:
+
+  - attributes with default values are set to their default values
+
+  - attributes without default values are left unset
+
+  (when defining your own initializer, you'll have to call the
+  inherited _initialize_ method in order to get this behaviour)
+
+- when loading:
+
+  - attributes without default values that are not represented in the
+    XML raise an error
+
+  - attributes with default values that are not represented in the XML
+    are set to their default values
+
+  - all other attributes are set to their respective values as present
+    in the XML
+
+
+- when saving:
+
+  - unset attributes without default values raise an error
+
+  - attributes with default values that are set to their default
+    values are not saved
+
+  - all other attributes are saved
+
+
+This implies that:
+
+- attributes that are set to their respective default values are not
+  represented in the XML
+
+- attributes without default values must be set explicitly before
+  saving
+
+
+
+=== Attribute handling details, augmenting existing classes
+
+I'll shed some more light on how xml-mapping adds mapped attributes to
+Ruby classes. An attribute declaration like
+
+  text_node :city, "City"
+
+maps some portion of the XML tree (here: the "City" sub-element) to an
+attribute (here: "city") of the class whose body the declaration
+appears in. When writing (marshalling) instances of the surrounding
+class into an XML document, xml-mapping will read the attribute value
+from the instance using the function named +city+; when reading
+(unmarshalling) an instance from an XML document, xml-mapping will use
+the one-parameter function <tt>city=</tt> to set the attribute in the
+instance to the value read from the XML document.
+
+If these functions don't exist at the time the node declaration is
+executed, xml-mapping adds default implementations that simply
+read/write the attribute value to instance variables that have the
+same name as the attribute. For example, the +city+ attribute
+declaration in the +Address+ class in the example added functions
++city+ and <tt>city=</tt> that read/write from/to the instance
+variable <tt>@city</tt>.
+
+If, however, these functions already exist prior to defining the
+attributes, xml-mapping will leave them untouched, so your precious
+self-written accessor methods that do whatever complicated internal
+processing of the data won't be overwritten.
+
+This means that you can not only create new mapping classes from
+scratch, you can also take existing classes that contain some
+"business logic" and "augment" them with xml-mapping capabilities. As
+a simple example, let's augment Ruby's "Time" class with node
+declarations that declare XML mappings for the day, month etc. fields:
+
+  :include: time_augm.intout
+
+Here XML mappings are defined for the existing fields +year+, +month+
+etc. Xml-apping noticed that the getter methods for those attributes
+existed, so it didn't overwrite them. When calling +save_to_xml+ on a
++Time+ object, these methods are called and return the object's values
+for those fields, which then get written to the output XML. Of course
+you could also derive a new class from a pre-existing one and
+implement the XML::Mapping stuff there, or even derive several such
+classes in order to define more than one XML mapping for one existing
+class.
+
+It should be mentioned that in the +Time+ example above, the setter
+methods (<tt>year=</tt>, <tt>month=</tt> etc.) didn't exist in +Time+
+(+Time+ objects are immutable), so xml-mapping defined its own setter
+methods that just set <tt>@year</tt>, <tt>@month</tt> etc., which is
+pretty useless for this case. So you can't really read +Time+ values
+back from an XML representation in this example. For that to work,
+you'd need functioning <tt>blah=(x)</tt> methods for each +blah+
+attribute that you want to define an XML mapping for.
+
+
+=== Defining your own node types
+
+It's easy to write additional node types and register them with the
+xml-mapping library. Let's say we want to extend the +Signature+ class
+from the example to include the time at which the signature was
+created. We want the new XML representation of such a signature to
+look like this:
+
+  :include: order_signature_enhanced.xml
+
+(we only save year, month and day to make this example shorter), and
+the mapping class declaration to look like this:
+
+  :include: order_signature_enhanced.rb
+
+(i.e. a new "time_node" declaration was added).
+
+We want this +signed_on+ call to define an attribute named +signed_on+
+which holds the date value from the XML in an instance of class
++Time+.
+
+This node type can be defined with this piece of code:
+
+  :include: time_node.rb
+
+The last line registers the new node type with the xml-mapping
+library. The name of the node factory method ("time_node") is
+automatically derived from the class name of the node type
+("TimeNode").
+
+There will be one instance of the node type per mapping class (not per
+mapping class instance). That instance will be created by the node
+factory method (+time_node+); there's no need to instantiate the node
+type directly. Whenever an instance of the mapping class needs to be
+marshalled/unmarshalled to/from XML, +set_attr_value+
+resp. +extract_attr_value+ will be called on the node type instance
+("node" for short).  The node factory method places the node into the
+mapping class; the @owner attribute of the node is set to reference
+the mapping class. The node factory method passes its arguments (in
+the example, that would be <tt>:signed_on, "signed-on",
+:default_value=>Time.now</tt>) to the node's initializer. TimeNode's
+parent class XML::Mapping::SingleAttributeNode already handles the
+<tt>:signed_on</tt> and <tt>:default_value=>Time.now</tt> arguments --
+<tt>:signed_on</tt> is stored into <tt>@attrname</tt>, and the default
+value declarations will be described in a moment. The remaining
+argument <tt>"signed-on"</tt> gets passed to our +initialize_impl+
+method as parameter _path_. We'll interpret it as an XPath expression
+that locates the time value relative to the parent mapping object's
+XML tree (in this case, this would be the XML tree rooted at the
++<Signature>+ element, i.e. the tree the +Signature+ instance was read
+from). We'll later have to read/store the year, month, and day values
+from <tt>path+"/year"</tt>, <tt>path+"/month"</tt>, and
+<tt>path+"/day"</tt>, respectively, so we create (and precompile)
+three corresponding XPath expressions using XML::XXPath.new and store
+them into member variables of the node. XML::XXPath is an XPath
+implementation that is bundled with xml-mapping. It is very
+incomplete, but it supports writing (not just reading) of XML nodes,
+which is needed to support writing data back to XML. The XML::XXPath
+library is explained in more detail below.
+
+The +extract_attr_value+ method is called whenever an instance of the
+class the node belongs to (+Signature+ in the example) is being
+created from an XML tree. The parameter _xml_ is that tree (again,
+this is the tree rooted at the +<Signature>+ element in this
+example). The method implementation is expected to extract the
+attribute's value from _xml_ and return it, or raise
+XML::Mapping::SingleAttributeNode::NoAttrValueSet if the attribute was
+"unset" in the XML (so the default value should be put in place if it
+was defined), or raise any other exception to signal an error and
+abort the whole process. In our implementation, we apply the xpath
+expressions created at initialization to _xml_
+(e.g. <tt>@y_path.first(xml)</tt>). An expression
+_xpath_expr_.first(_xml_) returns (as a REXML element) the first
+sub-element of _xml_ that matches _xpath_expr_, or raises
+XML::XXPathError if there was no such element. We apply REXML's _text_
+method to the returned element to get out the element's text, convert
+it to integer, and supply it to the constructor of the +Time+ object
+to be returned. (as a side note, if an XPath expression matches XML
+attributes, XML::XXPath methods like _first_ will return "Attribute"
+nodes that behave similarly to REXML::Element nodes, including
+messages like _name_ and _text_ (XML::XXPath extends REXML to support
+this because REXML's Attribute class is too incompatible), so this
+would've worked also if our XPath expressions named XML attributes,
+not elements). The +default_when_xpath_err+ thing calls the supplied
+block and returns its value, but maps the exception XML::XXPathError to
+the mentioned XML::Mapping::SingleAttributeNode::NoAttrValueSet (any
+other exceptions fall through unchanged). As said above,
+XML::Mapping::NoAttrValueSet is then caught by our superclass
+(XML::Mapping::SingleAttributeNode), and the default value is set if
+it was provided. So you should just wrap +default_when_xpath_err+
+around any applications of XPath expressions whose non-presence in the
+XML you want to be considered a non-presence of the attribute you're
+trying to extract. (XML::XXPath is designed to know knothing about
+XML::Mapping, so it doesn't raise
+XML::Mapping::SingleAttributeNode::NoAttrValueSet directly)
+
+The +set_attr_value+ method is called whenever an instance of the
+class the node belongs to (+Signature+ in the example) is being stored
+into an XML tree. The _xml_ parameter is the XML tree (a REXML element
+node; here this is again the tree rooted at the +<Signature>+
+element); _value_ is the current value of the attribute. _xml_ will
+most probably be "half-populated" by the time this method is called --
+the framework calls the +set_attr_value+ methods of all nodes of a
+mapping class in the order of their definition, letting each node fill
+its "bit" into _xml_. The method implementation is expected to write
+_value_ into (the correct sub-elements of) _xml_, or raise an
+exception to signal an error and abort the whole process. No default
+value handling is done here; +set_attr_value+ won't be called at all
+if the attribute had been set to its default value. In our
+implementation we grab the year, month and day values from _value_
+(which must be a +Time+), and store it into the sub-elements of _xml_
+identified by XPath expressions <tt>@y_path</tt>, <tt>@m_path</tt> and
+<tt>@d_path</tt>, respectively. We do this by calling XML::XXPath#first
+with an additional parameter <tt>:ensure_created=>true</tt>. An
+expression _xpath_expr_.first(_xml_,:ensure_created=>true) works just
+like _xpath_expr_.first(_xml_) if _xpath_expr_ was already present in
+_xml_. If it was not, it is created (preferable at the end of _xml_'s
+list of sub-nodes), and returned. See below for a more detailed
+documentation of the XPath interpreter.
+
+=== Element order in created XML documents
+
+As just said, XML::XXPath, when used to create new XML nodes, generally
+appends those nodes to the end of the list of subnodes of the node the
+xpath expression was applied to. All xml-mapping nodes that come with
+xml-mapping use XML::XXPath when writing data to XML, and therefore
+also append their data to the XML data written by preceding nodes (the
+nodes are invoked in the order of their definition). This means that,
+generally, your output data will appear in the XML document in the
+same order in which the corresponding xml-mapping node definitions
+appeared in the mapping class (unless you used XPath expressions like
+foo[number] which explicitly dictate a fixed position in the sequence
+of XML nodes). For instance, in the example from the beginning of this
+document, if we put the <tt>:signatures</tt> node _before_ the
+<tt>:items</tt> node, the <tt><Signed-By></tt> element will appear
+_before_ the sequence of <tt><Item></tt> elements in the output XML.
+
+
+
+== XPath interpreter
+
+XML::XXPath is an XPath parser. It is used in xml-mapping node type
+definitions, but can just as well be utilized stand-alone (it does
+not depend on xml-mapping). XML::XXPath is very incomplete and probably
+will always be (it only supports path elements of types _elt_name_,
+@_attr_name_, _elt_name_[@_attr_name_=_attr_value_],
+_elt_name_[_index_], and *), but it should be reasonably efficient
+(XPath expressions are precompiled), and, most importantly, it
+supports write access. For example, if you create the path
+"/foo/bar[3]/baz[@key='hiho']" in the XML document
+
+  <foo>
+    <bar>
+      <baz key="ab">hello</baz>
+      <baz key="xy">goodbye</baz>
+    </bar>
+  </foo>
+
+, you'll get:
+
+  <foo>
+    <bar>
+      <baz key='ab'>hello</baz>
+      <baz key='xy'>goodbye</baz>
+    </bar>
+    <bar/>
+    <bar>
+      <baz key='hiho'/>
+    </bar>
+  </foo>
+
+XML::XXPath is explained in more detail in the reference documentation.
+
+
+== License
+
+Ruby's.

@@ -1,0 +1,39 @@
+c = Company.load_from_file('company.xml') 
+=> #<Company:0x312dc8 @customers=[#<Customer:0x310bd8 @name="James Kirk", @id="jim">, #<Customer:0x310200 @name="Ernie", @id="ernie">, #<Customer:0x30f7f8 @name="Bert", @id="bert">], @address=#<Address:0x3123d8 @zip=10113, @city="Berlin">, @name="ACME inc.">
+c.name 
+=> "ACME inc."
+c.customers.size 
+=> 3
+c.customers[1] 
+=> #<Customer:0x310200 @name="Ernie", @id="ernie">
+c.customers[1].name 
+=> "Ernie"
+c.customers[0].name 
+=> "James Kirk"
+c.customers[0].name = 'James Tiberius Kirk' 
+=> "James Tiberius Kirk"
+c.customers << Customer.new('cm','Cookie Monster') 
+=> [#<Customer:0x310bd8 @name="James Tiberius Kirk", @id="jim">, #<Customer:0x310200 @name="Ernie", @id="ernie">, #<Customer:0x30f7f8 @name="Bert", @id="bert">, #<Customer:0x30e118 @name="Cookie Monster", @id="cm">]
+xml2 = c.save_to_xml 
+=> <company name='ACME inc.'> ... </>
+xml2.write($stdout,2) 
+<company name='ACME inc.'>
+      <address>
+        <city>Berlin</city>
+        <zip>10113</zip>
+      </address>
+      <customers>
+        <customer id='1607148'>
+          <name>James Tiberius Kirk</name>
+        </customer>
+        <customer id='1605888'>
+          <name>Ernie</name>
+        </customer>
+        <customer id='1604604'>
+          <name>Bert</name>
+        </customer>
+        <customer id='1601676'>
+          <name>Cookie Monster</name>
+        </customer>
+      </customers>
+    </company>

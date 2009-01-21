@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<company name="ACME inc.">
+
+    <address>
+      <city>Berlin</city>
+      <zip>10176</zip>
+      <street>Unter den Linden</street>
+      <number>12</number>
+    </address>
+
+    <offices>
+      <office speciality="pencils">
+        <classified>no</classified>
+        <address>
+          <city>Hamburg</city>
+          <zip>18282</zip>
+          <street>Feldweg</street>
+          <number>28</number>
+        </address>
+      </office>
+      <office speciality="weapons of mass destruction">
+        <classified>yes</classified>
+        <address>
+          <city>Baghdad</city>
+          <street>Airport</street>
+          <number>18</number>
+        </address>
+      </office>
+    </offices>
+
+
+    <customers>
+
+      <customer uid="jim">
+        <name>James Kirk</name>
+        <payment_method>cash</payment_method>
+      </customer>
+
+      <customer uid="ernie">
+        <name>Ernie</name>
+        <payment_method>sweeties</payment_method>
+      </customer>
+
+      <customer uid="cm">
+        <name>Cookie Monster</name>
+        <payment_method>cookies</payment_method>
+      </customer>
+      
+      <customer uid="sad">
+        <name>Saddam Hussein</name>
+        <payment_method>independent arms broker</payment_method>
+      </customer>
+
+    </customers>
+
+
+    <arrtest>
+      <entry>foo</entry>
+      <entry>bar</entry>
+      <entry>baz</entry>
+    </arrtest>
+
+
+    <stuff>
+      <customer uid="sad">
+        <name>Saddam Hussein</name>
+        <payment_method>independent arms broker</payment_method>
+      </customer>
+      <address>
+        <city>Berlin</city>
+        <zip>10176</zip>
+        <street>Unter den Linden</street>
+        <number>12</number>
+      </address>
+      <office speciality="weapons of mass destruction">
+        <classified>yes</classified>
+        <address>
+          <city>Baghdad</city>
+          <street>Airport</street>
+          <number>18</number>
+        </address>
+      </office>
+    </stuff>
+</company>

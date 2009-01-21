@@ -1,0 +1,16 @@
+s=Signature.load_from_file("order_signature_enhanced.xml") 
+=> #<Signature:0x1aed60 @signed_on=Sun Feb 13 00:00:00 MET 2005, @name="John Doe", @position="product manager">
+s.signed_on 
+=> Sun Feb 13 00:00:00 MET 2005
+s.signed_on=Time.local(1976,12,18) 
+=> Sat Dec 18 00:00:00 MET 1976
+s.save_to_xml.write($stdout,2) 
+<signature>
+      <Name>John Doe</Name>
+      <Position>product manager</Position>
+      <signed-on>
+        <year>1976</year>
+        <month>12</month>
+        <day>18</day>
+      </signed-on>
+    </signature>=> #<File:examples/order_signature_enhanced_usage.intout>

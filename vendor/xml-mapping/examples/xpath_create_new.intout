@@ -1,0 +1,181 @@
+require 'xml/xxpath'
+
+d=REXML::Document.new <<EOS
+  <foo>
+    <bar>
+      <baz key="work">Java</baz>
+      <baz key="play">Ruby</baz>
+    </bar>
+  </foo>
+EOS
+
+
+rootelt=d.root
+
+path1=XML::XXPath.new("/bar/baz[@key='work']")
+
+path1.create_new(rootelt)
+=> <baz key='work'/>
+d.write($stdout,2)
+    <foo>
+    <bar>
+      <baz key='work'>Java</baz>
+      <baz key='play'>Ruby</baz>
+    </bar>
+  <bar>
+        <baz key='work'/>
+      </bar>
+    </foo>
+
+### a new element is created for *each* path element, regardless of
+### what existed before. So a new "bar" element was added, with a new
+### "baz" element inside it
+
+### same call again...
+path1.create_new(rootelt)
+=> <baz key='work'/>
+d.write($stdout,2)
+    <foo>
+    <bar>
+      <baz key='work'>Java</baz>
+      <baz key='play'>Ruby</baz>
+    </bar>
+  <bar>
+        <baz key='work'/>
+      </bar>
+      <bar>
+        <baz key='work'/>
+      </bar>
+    </foo>
+
+### same procedure -- new elements added for each path element
+
+
+## get reference to 1st "baz" element
+firstbazelt=XML::XXPath.new("/bar/baz").first(rootelt)
+=> <baz key='work'> ... </>
+
+path2=XML::XXPath.new("@key2")
+
+path2.create_new(firstbazelt)
+=> #<XML::XXPath::Accessors::Attribute:0x314bf8 @parent=<baz key2='[unset]' key='work'> ... </>, @name="key2">
+d.write($stdout,2)
+    <foo>
+    <bar>
+      <baz key2='[unset]' key='work'>Java</baz>
+      <baz key='play'>Ruby</baz>
+    </bar>
+  <bar>
+        <baz key='work'/>
+      </bar>
+      <bar>
+        <baz key='work'/>
+      </bar>
+    </foo>
+
+### ok, new attribute node added
+
+### same call again...
+path2.create_new(firstbazelt)
+XML::XXPathError: XPath (): @key2: create_new and attribute already exists
+	from ../lib/xml/../xml/xxpath.rb:341:in `create_subnode_by_attr_name'
+	from ../lib/xml/../xml/xxpath.rb:68:in `initialize'
+	from ../lib/xml/../xml/xxpath.rb:67:in `call'
+	from ../lib/xml/../xml/xxpath.rb:146:in `all'
+	from ../lib/xml/../xml/xxpath.rb:125:in `first'
+	from ../lib/xml/../xml/xxpath.rb:167:in `create_new'
+### can't create that path anew again -- an element can't have more
+### than one attribute with the same name
+
+### the document hasn't changed
+d.write($stdout,2)
+    <foo>
+    <bar>
+      <baz key2='[unset]' key='work'>Java</baz>
+      <baz key='play'>Ruby</baz>
+    </bar>
+  <bar>
+        <baz key='work'/>
+      </bar>
+      <bar>
+        <baz key='work'/>
+      </bar>
+    </foo>
+
+
+
+
+### create_new the same path as in the ensure_created example
+baz6elt=XML::XXPath.new("/bar/baz[6]").create_new(rootelt)
+=> <baz/>
+d.write($stdout,2)
+    <foo>
+    <bar>
+      <baz key2='[unset]' key='work'>Java</baz>
+      <baz key='play'>Ruby</baz>
+    </bar>
+  <bar>
+        <baz key='work'/>
+      </bar>
+      <bar>
+        <baz key='work'/>
+      </bar>
+      <bar>
+        <baz/>
+        <baz/>
+        <baz/>
+        <baz/>
+        <baz/>
+        <baz/>
+      </bar>
+    </foo>
+
+### ok, new "bar" element and 6th "baz" element inside it created
+
+
+XML::XXPath.new("baz[6]").create_new(baz6elt.parent)
+XML::XXPathError: XPath (): baz[6]: create_new and element already exists
+	from ../lib/xml/../xml/xxpath.rb:330:in `create_subnode_by_name_and_index'
+	from ../lib/xml/../xml/xxpath.rb:52:in `initialize'
+	from ../lib/xml/../xml/xxpath.rb:51:in `call'
+	from ../lib/xml/../xml/xxpath.rb:146:in `all'
+	from ../lib/xml/../xml/xxpath.rb:125:in `first'
+	from ../lib/xml/../xml/xxpath.rb:167:in `create_new'
+### yep, baz[6] already existed and thus couldn't be created once
+### again
+
+### but of course...
+XML::XXPath.new("/bar/baz[6]").create_new(rootelt)
+=> <baz/>
+d.write($stdout,2)
+    <foo>
+    <bar>
+      <baz key2='[unset]' key='work'>Java</baz>
+      <baz key='play'>Ruby</baz>
+    </bar>
+  <bar>
+        <baz key='work'/>
+      </bar>
+      <bar>
+        <baz key='work'/>
+      </bar>
+      <bar>
+        <baz/>
+        <baz/>
+        <baz/>
+        <baz/>
+        <baz/>
+        <baz/>
+      </bar>
+      <bar>
+        <baz/>
+        <baz/>
+        <baz/>
+        <baz/>
+        <baz/>
+        <baz/>
+      </bar>
+    </foo>
+
+### this works because *all* path elements are newly created
+

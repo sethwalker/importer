@@ -1,0 +1,56 @@
+require 'xml/xxpath'
+
+d=REXML::Document.new <<EOS
+  <foo>
+    <bar/>
+    <bar/>
+  </foo>
+EOS
+
+
+rootelt=d.root
+
+
+XML::XXPath.new("*").all(rootelt)
+=> [<bar/>, <bar/>]
+### ok
+
+XML::XXPath.new("bar/*").first(rootelt, :allow_nil=>true)
+=> nil
+### ok, nothing there
+
+### the same call with :ensure_created=>true
+newelt = XML::XXPath.new("bar/*").first(rootelt, :ensure_created=>true)
+=> </>
+
+d.write($stdout,2)
+    <foo>
+    <bar>
+        </>
+      </bar>
+    <bar/>
+  </foo>
+
+
+### a new "unspecified" element was created
+newelt.unspecified?
+=> true
+
+### we must modify it to "specify" it
+newelt.name="new-one"
+newelt.text="hello!"
+newelt.unspecified?
+=> false
+
+d.write($stdout,2)
+    <foo>
+    <bar>
+        <new-one>hello!</new-one>
+      </bar>
+    <bar/>
+  </foo>
+
+
+### you could also set unspecified to false explicitly, as in:
+newelt.unspecified=true
+

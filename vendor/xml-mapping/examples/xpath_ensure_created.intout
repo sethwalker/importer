@@ -1,0 +1,114 @@
+require 'xml/xxpath'
+
+d=REXML::Document.new <<EOS
+  <foo>
+    <bar>
+      <baz key="work">Java</baz>
+      <baz key="play">Ruby</baz>
+    </bar>
+  </foo>
+EOS
+
+
+rootelt=d.root
+
+#### ensuring that a specific path exists inside the document
+
+XML::XXPath.new("/bar/baz[@key='work']").first(rootelt,:ensure_created=>true)
+=> <baz key='work'> ... </>
+d.write($stdout,2)
+    <foo>
+    <bar>
+      <baz key='work'>Java</baz>
+      <baz key='play'>Ruby</baz>
+    </bar>
+  </foo>
+
+### no change (path existed before)
+
+
+XML::XXPath.new("/bar/baz[@key='42']").first(rootelt,:ensure_created=>true)
+=> <baz key='42'/>
+d.write($stdout,2)
+    <foo>
+    <bar>
+      <baz key='work'>Java</baz>
+      <baz key='play'>Ruby</baz>
+    <baz key='42'/>
+      </bar>
+  </foo>
+
+### path was added
+
+XML::XXPath.new("/bar/baz[@key='42']").first(rootelt,:ensure_created=>true)
+=> <baz key='42'/>
+d.write($stdout,2)
+    <foo>
+    <bar>
+      <baz key='work'>Java</baz>
+      <baz key='play'>Ruby</baz>
+    <baz key='42'/>
+      </bar>
+  </foo>
+
+### no change this time
+
+XML::XXPath.new("/bar/baz[@key2='hello']").first(rootelt,:ensure_created=>true)
+=> <baz key2='hello' key='work'> ... </>
+d.write($stdout,2)
+    <foo>
+    <bar>
+      <baz key2='hello' key='work'>Java</baz>
+      <baz key='play'>Ruby</baz>
+    <baz key='42'/>
+      </bar>
+  </foo>
+
+### this fit in the 1st "baz" element since
+### there was no "key2" attribute there before.
+
+XML::XXPath.new("/bar/baz[2]").first(rootelt,:ensure_created=>true)
+=> <baz key='play'> ... </>
+d.write($stdout,2)
+    <foo>
+    <bar>
+      <baz key2='hello' key='work'>Java</baz>
+      <baz key='play'>Ruby</baz>
+    <baz key='42'/>
+      </bar>
+  </foo>
+
+### no change
+
+XML::XXPath.new("/bar/baz[6]/@haha").first(rootelt,:ensure_created=>true)
+=> #<XML::XXPath::Accessors::Attribute:0x3223b0 @parent=<baz haha='[unset]'/>, @name="haha">
+d.write($stdout,2)
+    <foo>
+    <bar>
+      <baz key2='hello' key='work'>Java</baz>
+      <baz key='play'>Ruby</baz>
+    <baz key='42'/>
+        <baz/>
+        <baz/>
+        <baz haha='[unset]'/>
+      </bar>
+  </foo>
+
+### for there to be a 6th "baz" element, there must be 1st..5th "baz" elements
+
+XML::XXPath.new("/bar/baz[6]/@haha").first(rootelt,:ensure_created=>true)
+=> #<XML::XXPath::Accessors::Attribute:0x31f830 @parent=<baz haha='[unset]'/>, @name="haha">
+d.write($stdout,2)
+    <foo>
+    <bar>
+      <baz key2='hello' key='work'>Java</baz>
+      <baz key='play'>Ruby</baz>
+    <baz key='42'/>
+        <baz/>
+        <baz/>
+        <baz haha='[unset]'/>
+      </bar>
+  </foo>
+
+### no change this time
+

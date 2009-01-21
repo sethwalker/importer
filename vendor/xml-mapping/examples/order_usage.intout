@@ -1,0 +1,147 @@
+####read access
+o=Order.load_from_file("order.xml") 
+=> #<Order:0x404730 @items={"RF-3341"=>#<Item:0x3f7fb0 @unit_price=0.85, @quantity=30, @descr="Cookie">, "RF-0034"=>#<Item:0x3faa70 @unit_price=28.5, @quantity=5, @descr="Chocolate">, "RF-0001"=>#<Item:0x3fcfa8 @unit_price=8.95, @quantity=10, @descr="Stuffed Penguin">}, @signatures=[#<Signature:0x3f4878 @name="John Doe", @position="product manager">, #<Signature:0x3f38d0 @name="Jill Smith", @position="clerk">, #<Signature:0x3f23a0 @name="Miles O'Brien", @position="Some Employee">], @client=#<Client:0x403a70 @work_address=#<Address:0x3ffbb8 @street="98765, Fulton Street", @state="CA", @zip=94102, @city="San Francisco">, @name="Jean Smith", @home_address=#<Address:0x402450 @street="2000, Alameda de las Pulgas", @state="CA", @zip=94403, @city="San Mateo">>, @reference="12343-AHSHE-314159">
+o.reference 
+=> "12343-AHSHE-314159"
+o.client 
+=> #<Client:0x403a70 @work_address=#<Address:0x3ffbb8 @street="98765, Fulton Street", @state="CA", @zip=94102, @city="San Francisco">, @name="Jean Smith", @home_address=#<Address:0x402450 @street="2000, Alameda de las Pulgas", @state="CA", @zip=94403, @city="San Mateo">>
+o.items.keys 
+=> ["RF-3341", "RF-0034", "RF-0001"]
+o.items["RF-0034"].descr 
+=> "Chocolate"
+o.items["RF-0034"].total_price 
+=> 142.5
+o.signatures 
+=> [#<Signature:0x3f4878 @name="John Doe", @position="product manager">, #<Signature:0x3f38d0 @name="Jill Smith", @position="clerk">, #<Signature:0x3f23a0 @name="Miles O'Brien", @position="Some Employee">]
+o.signatures[2].name 
+=> "Miles O'Brien"
+o.signatures[2].position 
+=> "Some Employee"
+## default value was set
+
+o.total_price 
+=> 257.5
+
+####write access
+o.client.name="James T. Kirk"
+o.items['RF-4711'] = Item.new
+o.items['RF-4711'].descr = 'power transfer grid'
+o.items['RF-4711'].quantity = 2
+o.items['RF-4711'].unit_price = 29.95
+
+s=Signature.new
+s.name='Harry Smith'
+s.position='general manager'
+o.signatures << s
+xml=o.save_to_xml #convert to REXML node; there's also o.save_to_file(name) 
+=> <order reference='12343-AHSHE-314159'> ... </>
+xml.write($stdout,2) 
+<order reference='12343-AHSHE-314159'>
+      <Client>
+        <Name>James T. Kirk</Name>
+        <Address where='home'>
+          <City>San Mateo</City>
+          <State>CA</State>
+          <ZIP>94403</ZIP>
+          <Street>2000, Alameda de las Pulgas</Street>
+        </Address>
+        <Address where='work'>
+          <City>San Francisco</City>
+          <State>CA</State>
+          <ZIP>94102</ZIP>
+          <Street>98765, Fulton Street</Street>
+        </Address>
+      </Client>
+      <Item reference='RF-3341'>
+        <Description>Cookie</Description>
+        <Quantity>30</Quantity>
+        <UnitPrice>0.85</UnitPrice>
+      </Item>
+      <Item reference='RF-0034'>
+        <Description>Chocolate</Description>
+        <Quantity>5</Quantity>
+        <UnitPrice>28.5</UnitPrice>
+      </Item>
+      <Item reference='RF-0001'>
+        <Description>Stuffed Penguin</Description>
+        <Quantity>10</Quantity>
+        <UnitPrice>8.95</UnitPrice>
+      </Item>
+      <Item reference='RF-4711'>
+        <Description>power transfer grid</Description>
+        <Quantity>2</Quantity>
+        <UnitPrice>29.95</UnitPrice>
+      </Item>
+      <Signed-By>
+        <Signature>
+          <Name>John Doe</Name>
+          <Position>product manager</Position>
+        </Signature>
+        <Signature>
+          <Name>Jill Smith</Name>
+          <Position>clerk</Position>
+        </Signature>
+        <Signature>
+          <Name>Miles O&apos;Brien</Name>
+        </Signature>
+        <Signature>
+          <Name>Harry Smith</Name>
+          <Position>general manager</Position>
+        </Signature>
+      </Signed-By>
+    </order>
+####Starting a new order from scratch
+o = Order.new 
+=> #<Order:0x3b5500 @signatures=[]>
+## attributes with default values (here: signatures) are set
+## automatically
+
+xml=o.save_to_xml 
+XML::MappingError: no value, and no default value, for attribute: reference
+	from ../lib/xml/../xml/mapping/base.rb:381:in `obj_to_xml'
+	from ../lib/xml/../xml/mapping/base.rb:157:in `fill_into_xml'
+	from ../lib/xml/../xml/mapping/base.rb:156:in `each'
+	from ../lib/xml/../xml/mapping/base.rb:156:in `fill_into_xml'
+	from ../lib/xml/../xml/mapping/base.rb:168:in `save_to_xml'
+## can't save as long as there are still unset attributes without
+## default values
+
+o.reference = "FOOBAR-1234"
+
+o.client = Client.new
+o.client.name = 'Ford Prefect'
+o.client.home_address = Address.new
+o.client.home_address.street = '42 Park Av.'
+o.client.home_address.city = 'small planet'
+o.client.home_address.zip = 17263
+o.client.home_address.state = 'Betelgeuse system'
+
+o.items={'XY-42' => Item.new}
+o.items['XY-42'].descr = 'improbability drive'
+o.items['XY-42'].quantity = 3
+o.items['XY-42'].unit_price = 299.95
+
+o.save_to_xml.write($stdout,2)
+
+<order reference='FOOBAR-1234'>
+      <Client>
+        <Name>Ford Prefect</Name>
+        <Address where='home'>
+          <City>small planet</City>
+          <State>Betelgeuse system</State>
+          <ZIP>17263</ZIP>
+          <Street>42 Park Av.</Street>
+        </Address>
+      </Client>
+      <Item reference='XY-42'>
+        <Description>improbability drive</Description>
+        <Quantity>3</Quantity>
+        <UnitPrice>299.95</UnitPrice>
+      </Item>
+    </order>
+## the root element name when saving an object to XML will by default
+## be derived from the class name (in this example, "Order" became
+## "order"). This can be overridden on a per-class basis; see
+## XML::Mapping::ClassMethods#root_element_namefor details.
+
+=> nil

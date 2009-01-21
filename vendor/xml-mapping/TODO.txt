@@ -1,0 +1,32 @@
+- XML::XXPath: generalize foo[@x='bar'] to foo[<any XPath
+  expression>='bar'] (unless create/create_new implementation proves
+  to be too difficult, but I don't think it will...)
+
+- documentation:
+
+  - README:
+
+    - multi-attribute nodes
+
+- XML::Mapping: Move @options hash functionality from
+  SingleAttributeNode to Node.
+
+- XML::Mapping/default attribute values: Update documentation, digest
+  "nil" issues...
+
+- add streaming input/output to XML::Mapping, i.e. SAX-based input in
+  addition to the current REXML/DOM - based one. Probably won't be
+  implementable for some more complicated XPaths -- raise meaningful
+  exceptions in those cases.
+
+- XML::XXPath/XML::Mapping: add XML text nodes (the sub-node of an
+  element node that contains that element's text) first-class to
+  XML::XXPath. Use it for things like text_node :contents, "text()".
+
+  Along those lines: promote XPath node "unspecifiedness" from an
+  attribute to a REXML node object of "unspecified" class that's
+  turned into an attribute/element/text node when necessary
+
+- (eventually, maybe) provide a "scaffolding" feature to automatically
+  turn a dtd/schema into a set of node type definitions or even a set
+  of mapping classes
