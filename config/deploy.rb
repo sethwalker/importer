@@ -27,3 +27,19 @@ namespace :deploy do
 end
                                   
 before 'deploy:symlink', 'deploy:migrate'
+
+Configs = ['config/importer.yml', 'config/database.yml', 'config/shopify.yml']
+
+task :after_update_code do
+  Configs.each do |y|
+    run "ln -nfs #{deploy_to}/#{y} #{release_path}/#{y}"
+  end
+end
+
+task :update_configs do
+  run "mkdir -p #{deploy_to}/config"
+  
+  Configs.each do |y|
+    put File.read(y), "#{deploy_to}/#{y}"
+  end
+end

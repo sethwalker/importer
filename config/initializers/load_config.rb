@@ -1,1 +1,1 @@
-APP_CONFIG = YAML.load_file("/etc/importer/config.yml")[RAILS_ENV]
+APP_CONFIG = YAML.load_file("#{RAILS_ROOT}/config/importer.yml")[RAILS_ENV]
