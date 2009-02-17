@@ -160,7 +160,7 @@ class OsCommerceImport < Import
       
       @variants = []
       0.upto(titles.size-1) do |index|
-        variants << create_variant(titles[index], @base_price.to_f + prices[index].to_f, @weight, @sku)
+        @variants << create_variant(titles[index], @base_price.to_f + prices[index].to_f, @weight, @sku)
       end
       
       @variants
