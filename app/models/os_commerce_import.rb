@@ -178,12 +178,14 @@ class OsCommerceImport < Import
   end
   
   def create_variant(title, price, grams, sku, quant = nil)
+    variant_attribs = { :title => title, :price => price, :grams => grams, :sku => sku }
+    
     if quant
-      ShopifyAPI::Variant.new( :title => title, :price => price, :grams => grams, :sku => sku, :inventory_management => 'shopify', :inventory_quantity => quant )
-    else
-      ShopifyAPI::Variant.new( :title => title, :price => price, :grams => grams, :sku => sku )
+      variant_attribs[:inventory_management] = 'shopify'
+      variant_attribs[:inventory_quantity] = quant
     end
-
+    
+    ShopifyAPI::Variant.new( variant_attribs )
   end
   
   def number_of_variants_for(product)
