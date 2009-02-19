@@ -90,6 +90,7 @@ module ShopifyAPI
   # Custom collection
   #
   class CustomCollection < ActiveResource::Base
+    self.prefix = "/admin/"
     def products
       Product.find(:all, :params => {:collection_id => self.id})
     end
