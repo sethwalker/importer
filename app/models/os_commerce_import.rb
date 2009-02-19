@@ -120,7 +120,7 @@ class OsCommerceImport < Import
   end 
 
   def add_product_image(url)
-    return if url.blank? || !Import.existent_url?(url)
+    return if url.blank?
     
     ShopifyAPI::Image.new(:src => url)
   end

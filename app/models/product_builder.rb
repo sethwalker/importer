@@ -22,6 +22,16 @@ class ProductBuilder
     @images << load_image(image)
   end
 
+  def find_or_save_collection
+    raise self.inspect unless collection && !collection.nil?
+    @@collections ||= {}
+    @@collections[collection.title] ||= ShopifyAPI::CustomCollection.find(:all).find { |c| c.title == collection.title }
+    @@collections[collection.title] ||= collection.save
+    return @@collections[collection.title]
+  rescue Exception => c
+    raise self.inspect
+  end
+
   def save
     return false unless valid?
 
@@ -46,9 +56,7 @@ class ProductBuilder
       end
       
       if collection.title != nil 
-        if collection.new?
-          collection.save
-        end
+        collection = find_or_save_collection
 
         ShopifyAPI::Collect.create( :collection_id => collection.id, :product_id => product.id )
       end
@@ -134,11 +142,7 @@ class ProductBuilder
   end
   
   def load_collection(attributes)
-    if exists = ShopifyAPI::CustomCollection.find(:all).find { |c| c.title == attributes[:collection] }
-      @collection = exists
-    else
-      @collection = ShopifyAPI::CustomCollection.new( :title => attributes[:collection] )
-    end
+    @collection = ShopifyAPI::CustomCollection.new( :title => attributes[:collection] )
   end
 
   def load(attributes)
