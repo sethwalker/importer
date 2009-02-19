@@ -105,11 +105,11 @@ class OsCommerceImport < Import
 
     # image
     if Import.existent_url?("#{base_url}/images/#{row['v_products_image']}")
-      @image_url = "#{base_url}/images/#{row['v_products_image']}"
+      @image_url = URI.encode("#{base_url}/images/#{row['v_products_image']}")
     elsif Import.existent_url?("#{base_url}/images/#{row['v_products_image_med']}")
-      @image_url = "#{base_url}/images/#{row['v_products_image_med']}"
+      @image_url = URI.encode("#{base_url}/images/#{row['v_products_image_med']}")
     elsif Import.existent_url?("#{base_url}/images/#{row['v_products_image_lrg']}")
-      @image_url = "#{base_url}/images/#{row['v_products_image_lrg']}"      
+      @image_url = URI.encode("#{base_url}/images/#{row['v_products_image_lrg']}")
     else
       @image_url = ""
     end

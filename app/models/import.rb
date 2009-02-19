@@ -142,7 +142,7 @@ class Import < ActiveRecord::Base
   
   def Import.existent_url?(url)
     begin
-      uri = URI.parse(url)
+      uri = URI.parse(URI.encode(url))
     rescue URI::InvalidURIError => e
       RAILS_DEFAULT_LOGGER.debug "Invalid URI: #{uri}"
       return false
@@ -150,6 +150,8 @@ class Import < ActiveRecord::Base
 
     begin
       http_conn = Net::HTTP.new(uri.host, uri.port)
+      http_conn.use_ssl = (uri.scheme == 'https')
+      http_conn.verify_mode = OpenSSL::SSL::VERIFY_NONE
       resp, data = http_conn.head(uri.path , nil)
     rescue Exception => e
       RAILS_DEFAULT_LOGGER.debug "Invalid URI: #{uri}"
