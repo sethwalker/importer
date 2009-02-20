@@ -49,10 +49,8 @@ class ProductBuilder
       end
 
       images.each do |image|
-        if Import.existent_url?(image.src.to_s)
-          image.prefix_options[:product_id] = product.id
-          image.save
-        end
+        image.prefix_options[:product_id] = product.id
+        image.save
       end
       
       if collection.title != nil 
